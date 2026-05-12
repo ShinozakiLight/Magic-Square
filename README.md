@@ -21,7 +21,27 @@ A sophisticated **Magic Square Puzzle** game featuring a modern UI, image-based 
 
 ## 🚀 Getting Started
 
-### Prerequisites
+### requirements
 Ensure you have the following libraries installed:
 ```bash
-pip install customtkinter pillow reportlab
+pip install -r requirements.txt
+```
+
+## 💻 Run the Program
+Launch the application by running the main script:
+```bash
+python main.py
+```
+
+## 🎨 Design & Presentation
+Figma Design
+
+[Figma](https://www.figma.com/proto/bnkZzjK5zGgIdclTjb1IPo/Magic-Square?node-id=0-1&t=VBU1O17SXo8D9ENZ-1)
+
+Canva Presentation
+
+[Canva](https://canva.link/3wsemf9d6bz8gf8)
+
+## 👤 Developer
+Phonlakrit Somsong
+
