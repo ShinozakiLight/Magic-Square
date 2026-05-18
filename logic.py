@@ -1,3 +1,5 @@
+#logic.py
+
 def generate_magic_square(n: int):
     if n == 4:
         grid = [[r * 4 + c + 1 for c in range(4)] for r in range(4)]
