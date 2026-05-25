@@ -1,8 +1,8 @@
 # constants.py
 
 ALPHABET = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-SYMBOLS = list("★☆◎◇◆○●▲▼■□")
-EMOJI_SET = ["🌟", "🚀", "🎈", "🍎", "🍊", "🍇", "🐶", "🐱", "⚽", "🏀"]
+SYMBOLS = list("⛾⛿☯☸⛩⛰⛱⛴⛷⛸♸⚥☊☍☓☤🄰🄱🆈🆉⚖♇♪♬")
+EMOJI_SET = list("☀☁☂☃☄★☆☇☈☉☊☋☌☍☎☏☐☑☒☓☖☗☙♠♣♥♦♨✈✌✍✎✏✐✑✒✓✔✕✖")
 THAI_SET = list("กขคฆงจฉชซญฎฏฐฑฒณดตถทธนบปผฝพฟภมยรลวศษสหฬอฮ")
 JAPANESE_SET = list("あいうえおかきくけこさしすせそたちつてと")
 
@@ -20,6 +20,79 @@ POP = {
     "ok":         "#2e7d32",
     "ng":         "#d32f2f",
     "subtext":    "#222222"
+}
+
+# ==========================================
+# 🎨 CENTRALIZED BUTTON STYLES CONFIGURATION
+# ==========================================
+# คุณสามารถเปลี่ยนสี รูปร่าง และฟอนต์ของปุ่มทั้งหมดในระบบได้จากตรงนี้
+BTN_STYLES = {
+    # --- ปุ่มทั่วไป/ปุ่มหลักของหน้าต่าง ---
+    "primary": {
+        "fg_color": "#BEAEE2", "hover_color": "#575766", "text_color": "black",
+        "corner_radius": 0, "border_width": 1, "border_color": "black", "font": ("Garamond", 18)
+    },
+    # --- ปุ่มยกเลิก / ปุ่มย้อนกลับ ---
+    "cancel": {
+        "fg_color": "#F9F9F9", "hover_color": "#8C8C8C", "text_color": "black",
+        "corner_radius": 0, "border_width": 1, "border_color": "black", "font": ("Garamond", 18)
+    },
+    # --- ปุ่มหน้าต่างตารางคะแนน ---
+    "leaderboard": {
+        "fg_color": "#CDF0EA", "hover_color": "#575766", "text_color": "black",
+        "corner_radius": 0, "border_width": 1, "border_color": "black", "font": ("Garamond", 18)
+    },
+    # --- ปุ่มออกจากเกม / ปิดโปรแกรม ---
+    "exit": {
+        "fg_color": "#FF807E", "hover_color": "#575766", "text_color": "black",
+        "corner_radius": 0, "border_width": 1, "border_color": "black", "font": ("Garamond", 18)
+    },
+    # --- ปุ่มเปลี่ยนภาษา 🌐 ---
+    "language": {
+        "fg_color": "#F7DBF0", "hover_color": "#6B6B83", "text_color": "black",
+        "corner_radius": 20, "font": ("Garamond", 14)
+    },
+    
+    # --- ปุ่มภายในหน้าบอร์ดเกม (GameManager) ---
+    "game_cancel": {
+        "fg_color": "#F9F9F9", "hover_color": "#8C8C8C", "text_color": "black",
+        "corner_radius": 0, "border_width": 1, "border_color": "black", "font": ("Garamond", 16)
+    },
+    "game_shuffle": {
+        "fg_color": "#FF807E", "hover_color": "#E56262", "text_color": "black",
+        "corner_radius": 0, "border_width": 1, "border_color": "black", "font": ("Garamond", 16)
+    },
+    "game_hint": {
+        "fg_color": "#CDF0EA", "hover_color": "#219653", "text_color": "black",
+        "corner_radius": 0, "border_width": 1, "border_color": "black", "font": ("Garamond", 18)
+    },
+    "game_undo": {
+        "fg_color": "#F9F9F9", "hover_color": "#76769E", "text_color": "black",
+        "corner_radius": 0, "border_width": 1, "border_color": "black", "font": ("Garamond", 18)
+    },
+    "game_submit": {
+        "fg_color": "#BEAEE2", "hover_color": "#73B0D8", "text_color": "black",
+        "corner_radius": 0, "border_width": 1, "border_color": "black", "font": ("Garamond", 18)
+    },
+    "game_dev": {
+        "fg_color": "#333333", "hover_color": "#555555", "text_color": "yellow",
+        "corner_radius": 4, "font": ("Arial", 10)
+    }
+}
+
+MODE_OPTIONS = {
+    "English": ["English", "Japanese", "Thai", "Emoji", "Symbols"],
+    "日本語": ["英語", "日本語", "タイ語", "絵文字", "記号"],
+    "ไทย": ["อังกฤษ", "ญี่ปุ่น", "ไทย", "อีโมจิ", "สัญลักษณ์"]
+}
+
+MODE_TO_ENGLISH = {
+    # English
+    "English": "English", "Japanese": "Japanese", "Thai": "Thai", "Emoji": "Emoji", "Symbols": "Symbols",
+    # 日本語
+    "英語": "English", "日本語": "Japanese", "タイ語": "Thai", "絵文字": "Emoji", "記号": "Symbols",
+    # ไทย
+    "อังกฤษ": "English", "ญี่ปุ่น": "Japanese", "ไทย": "Thai", "อีโมจิ": "Emoji", "สัญลักษณ์": "Symbols"
 }
 
 LANG_DB = {
@@ -52,15 +125,20 @@ LANG_DB = {
         "submit_name_title_error" : "Input Error",
         "submit_name_error" : "Please input your name !",
         "submit_info" : "Submit",
-        "submit_game" : "Submit",
+        "submit" : "Submit",
         "magic_complete": "🎉 Magic Square Completed! 🎉",
         "style_label_image" : "Play with a background picture to help you solve the puzzle.",
         "style_label_classic" : "Traditional challenge using only numbers.",
-        "classic" : "Classic"
+        "style_label_ui" : "Style",
+        "btn_standard": "Standard",
+        "btn_creative" : "Creative",
+        "goodbye_con" : "🎉 Congratulations! 🎉", 
+        "goodbye_label" : "You complete the Magic square !!",
+        "goodbye_button" : "Thank you !"
     },
     "日本語": {
-        "welcome": "魔方陣へようこそ！", 
-        "start_btn": "スタート",
+        "welcome": "マジック・スクエアへようこそ！", 
+        "start_btn": "スタート !",
         "leaderboard": "ランキング", 
         "exit": "終了",
         "info_title": "情報を入力してください",
@@ -87,11 +165,16 @@ LANG_DB = {
         "submit_name_title_error" : "入力エラー",
         "submit_name_error" : "名前を入力してください！",
         "submit_info" : "決定",
-        "submit_game" : "決定",
+        "submit" : "決定",
         "magic_complete": "🎉 魔法陣が完成しました！ 🎉",
-        "style_label_image" : "Play with a background picture to help you solve the puzzle.",
-        "style_label_classic" : "Traditional challenge using only numbers.",
-        "classic" : "Classic"
+        "style_label_image" : "背景のイラストをヒントにしてパズルを解こう",
+        "style_label_classic" : "数字だけを使った、伝統的な頭脳チャレンジ",
+        "style_label_ui" : "スタイル",
+        "btn_standard": "スタンダード",
+        "btn_creative": "クリエイティブ",
+        "goodbye_con" : "🎉 おめでとうございます！ 🎉", 
+        "goodbye_label" : "魔方陣を完成させました！!",
+        "goodbye_button" : "遊んでくれてありがとう！"
     },
     "ไทย": {
         "welcome": "ยินดีต้อนรับสู่จัตุรัสกล !",
@@ -122,10 +205,15 @@ LANG_DB = {
         "submit_name_title_error" : "ข้อผิดพลาด",
         "submit_name_error" : "กรุณากรอกชื่อของคุณ !",
         "submit_info" : "ตกลง",
-        "submit_game" : "ตกลง",
+        "submit" : "ตกลง",
         "magic_complete": "🎉 คุณทำตารางเวทมนตร์สำเร็จแล้ว! 🎉",
-        "style_label_image" : "Play with aก background picture to help you solve the puzzle.",
-        "style_label_classic" : "Traditกional challenge using only numbers.",
-        "classic" : "Clasกsic"
+        "style_label_image" : "เล่นกับภาพพื้นหลังเพื่อช่วยคุณไขปริศนา",
+        "style_label_classic" : "ความท้าทายแบบดั้งเดิมโดยใช้ตัวเลขเท่านั้น",
+        "style_label_ui" : "สไตล์",
+        "btn_standard": "มาตรฐาน", 
+        "btn_creative": "สร้างสรรค์",
+        "goodbye_con" : "🎉 ยินดีด้วยด้วยครับ ! 🎉", 
+        "goodbye_label" : "คุณแก้โจทย์จัตุรัสกลสำเร็จแล้ว !!",
+        "goodbye_button" : "ขอบคุณที่ร่วมสนุกครับ !"
     }
 }
