@@ -1,8 +1,8 @@
 # constants.py
 
 ALPHABET = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-SYMBOLS = list("⛾⛿☯☸⛩⛰⛱⛴⛷⛸♸⚥☊☍☓☤🄰🄱🆈🆉⚖♇♪♬")
-EMOJI_SET = list("☀☁☂☃☄★☆☇☈☉☊☋☌☍☎☏☐☑☒☓☖☗☙♠♣♥♦♨✈✌✍✎✏✐✑✒✓✔✕✖")
+SYMBOLS = list("★☆◆◇▲▼■□●○◎☯⚔⚒⚙⚓⚖♪♬♠♣♥♦♔♕♖")
+EMOJI_SET = ["🌟", "🚀", "🎈", "🍎", "🍊", "🍇", "🐶", "🐱", "👍", "🏀", "🎨", "🎬", "🎸", "🍕", "🍦", "🛸"]
 THAI_SET = list("กขคฆงจฉชซญฎฏฐฑฒณดตถทธนบปผฝพฟภมยรลวศษสหฬอฮ")
 JAPANESE_SET = list("あいうえおかきくけこさしすせそたちつてと")
 
@@ -95,6 +95,15 @@ MODE_TO_ENGLISH = {
     "อังกฤษ": "English", "ญี่ปุ่น": "Japanese", "ไทย": "Thai", "อีโมจิ": "Emoji", "สัญลักษณ์": "Symbols"
 }
 
+PATTERN_TO_ENGLISH = {
+    # ภาษาอังกฤษ
+    "Random All": "Random All", "Horizontal": "Horizontal", "Vertical": "Vertical", "Diagonal": "Diagonal",
+    # ภาษาไทย
+    "สลับทั้งหมด": "Random All", "แนวนอน": "Horizontal", "แนวตั้ง": "Vertical", "แนวทแยง": "Diagonal",
+    # ภาษาญี่ปุ่น
+    "すべてシャッフル": "Random All", "水平方向": "Horizontal", "垂直方向": "Vertical", "対角線方向": "Diagonal"
+}
+
 LANG_DB = {
     "English": {
         "welcome": "Welcome to Magic Square !",
@@ -134,7 +143,12 @@ LANG_DB = {
         "btn_creative" : "Creative",
         "goodbye_con" : "🎉 Congratulations! 🎉", 
         "goodbye_label" : "You complete the Magic square !!",
-        "goodbye_button" : "Thank you !"
+        "goodbye_button" : "Thank you !",
+        "pattern_label": "Pattern : ",
+        "pattern_options": ["Random All", "Horizontal", "Vertical", "Diagonal"],
+        "all_patterns": "🌐 All Patterns",
+        "cert_success_title": "Export Success",
+        "cert_success_msg": "The certificate image has been successfully created:",
     },
     "日本語": {
         "welcome": "マジック・スクエアへようこそ！", 
@@ -174,7 +188,12 @@ LANG_DB = {
         "btn_creative": "クリエイティブ",
         "goodbye_con" : "🎉 おめでとうございます！ 🎉", 
         "goodbye_label" : "魔方陣を完成させました！!",
-        "goodbye_button" : "遊んでくれてありがとう！"
+        "goodbye_button" : "遊んでくれてありがとう！",
+        "pattern_label": "ヒント配置 : ",
+        "pattern_options": ["すべてシャッフル", "水平方向", "垂直方向", "対角線方向"],
+        "all_patterns": "🌐 すべての配置",
+        "cert_success_title": "エクスポート成功",
+        "cert_success_msg": "賞状の画像が正常に作成されました:",
     },
     "ไทย": {
         "welcome": "ยินดีต้อนรับสู่จัตุรัสกล !",
@@ -214,6 +233,11 @@ LANG_DB = {
         "btn_creative": "สร้างสรรค์",
         "goodbye_con" : "🎉 ยินดีด้วยด้วยครับ ! 🎉", 
         "goodbye_label" : "คุณแก้โจทย์จัตุรัสกลสำเร็จแล้ว !!",
-        "goodbye_button" : "ขอบคุณที่ร่วมสนุกครับ !"
+        "goodbye_button" : "ขอบคุณที่ร่วมสนุกครับ !",
+        "pattern_label": "รูปแบบคำใบ้ : ",
+        "pattern_options": ["สลับทั้งหมด", "แนวนอน", "แนวตั้ง", "แนวทแยง"],
+        "all_patterns": "🌐 ทุกรูปแบบ",
+        "cert_success_title": "ส่งออกสำเร็จ",
+        "cert_success_msg": "จัดทำภาพใบเกียรติบัตรเรียบร้อยแล้ว:",
     }
 }

@@ -3,18 +3,12 @@
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import messagebox
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageDraw, ImageFont
 import random, os, datetime
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.utils import ImageReader
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
+import json
 
 from logic import generate_magic_square, rotate_grid
-from constants import get_fillers, LANG_DB, BTN_STYLES 
-
-import json
+from constants import get_fillers, LANG_DB, BTN_STYLES
 
 class GameManager:
     def __init__(self, master_card, on_cancel_callback, on_finish_callback, get_lang_func):
@@ -35,21 +29,29 @@ class GameManager:
         self.tk_images = []
         self.mode = "English" 
         self.visual_style = "Image" 
+
+        # =========================================================================
+        # [โซนปรับแต่งความสวยงามเฉพาะโหมด Creative (โหมดเล่นแบบมีภาพพื้นหลัง)]
+        # แก้ไขค่าวัดตรงนี้ได้เลยครับ ระบบจะอัปเดตทั้งหน้าจอเกมและใบเกียรติบัตรให้ตรงกัน
+        # =========================================================================
+        self.creative_img_opacity = 0.80      # ความชัดของรูปภาพ (0.0 = จางจนหาย, 1.0 = ชัดเท่าต้นฉบับ) ยิ่งจาง ฟอนต์ยิ่งเด่น
+        self.creative_bg_blend = (255, 255, 255) # สีที่ใช้เกลี่ยผสมให้รูปจางลง (255, 255, 255 คือสีขาวช่วยให้ภาพดูคลีนสะอาด)
+        self.creative_num_color = "#FFFFFF"   # สีของตัวเลข (แนะนำสีเข้มจัดหรือดำเพื่อให้ตัดกับรูปภาพจางๆ)
+        self.creative_char_color = "#FFFFFF"  # สีของตัวอักษรปริศนา
+        self.creative_border_color = "#D1D5DB" # สีเส้นขอบแบ่งช่องของโหมดรูปภาพ
+        # =========================================================================
         
         self.top_bar = ctk.CTkFrame(self.card, fg_color="transparent")
         self.top_bar.pack(fill="x", pady=(20, 10), padx=30)
 
-        # [แก้ไขใช้ BTN_STYLES]
         self.btn_debug = ctk.CTkButton(self.top_bar, text="DEV", width=40, height=20, 
                                        command=self.instant_win, **BTN_STYLES["game_dev"])
         self.btn_debug.pack(side="right", padx=5)
         
-        # [แก้ไขใช้ BTN_STYLES]
         self.btn_back = ctk.CTkButton(self.top_bar, text="Cancel", width=90, height=35, 
                                       command=self.on_cancel, **BTN_STYLES["game_cancel"])
         self.btn_back.pack(side="left")
 
-        # [แก้ไขใช้ BTN_STYLES]
         self.btn_shuffle = ctk.CTkButton(self.top_bar, text="Shuffle", width=90, height=35, 
                                          command=self.shuffle_board, **BTN_STYLES["game_shuffle"])
         self.btn_shuffle.pack(side="left", padx=15)
@@ -92,7 +94,7 @@ class GameManager:
         self.n = size
         self.mode = mode
         self.visual_style = visual_style 
-        self.arrange_mode = arrange_mode # <--- เก็บค่าเข้าคลาส
+        self.arrange_mode = arrange_mode
         
         self.image_pieces = {} 
         self.tk_images = []
@@ -126,16 +128,18 @@ class GameManager:
             top = (img.height - min_dim) / 2
             img = img.crop((left, top, left + min_dim, top + min_dim))
             img = img.resize((600, 600), Image.LANCZOS)
-            
+
             piece_size = 600 // self.n
+
             for r in range(self.n):
                 for c in range(self.n):
                     p_left, p_top = c * piece_size, r * piece_size
                     crop_img = img.crop((p_left, p_top, p_left + piece_size, p_top + piece_size))
-                    
-                    overlay = Image.new('RGBA', crop_img.size, (255, 255, 255, 25)) 
-                    
-                    final_piece = Image.alpha_composite(crop_img, overlay)
+
+                    # นวดเกลี่ยสีพื้นหลังตามระดับ Opacity เพื่อให้ภาพจางลงแบบมืออาชีพ สบายตาขึ้น
+                    base_pastel = Image.new('RGBA', crop_img.size, self.creative_bg_blend + (255,))
+                    final_piece = Image.blend(crop_img, base_pastel, alpha=1.0 - self.creative_img_opacity)
+
                     target_num = self.target_goal[r][c]
                     self.image_pieces[target_num] = final_piece
         except Exception as e:
@@ -153,44 +157,34 @@ class GameManager:
             idx += 1
             
         arrange = getattr(self, 'arrange_mode', 'Random All')
-        
-        # 🌟 ตรวจสอบโหมดการเรียงตัวอักษร
         if arrange in ["Horizontal", "Vertical", "Diagonal"]:
             path_coords = []
             n = self.n
-            
-            # ขั้นตอนที่ 1: สร้างพิกัดพื้นฐาน (Base Coordinates) เริ่มจากมุมซ้ายบนปกติ
-            if arrange == "Horizontal":     # แแนวนอนปกติ
+            if arrange == "Horizontal":
                 path_coords = [(r, c) for r in range(n) for c in range(n)]
-            elif arrange == "Vertical":     # แนวตั้งปกติ
-                path_coords = [(r, c) for c in range(n) for r in range(n)]
-            elif arrange == "Diagonal":     # แนวเฉียงปกติ
+            elif arrange == "Vertical":
+                path_coords = [(r, c) for r in range(n) for c in range(n)]
+            elif arrange == "Diagonal":
                 for d in range(2 * n - 1):
                     for r in range(max(0, d - n + 1), min(n, d + 1)):
                         path_coords.append((r, d - r))
             
-            # ขั้นตอนที่ 2: 🎲 สุ่มการพลิกทิศทางเพื่อไม่ให้เด็กๆ เดาจุดเริ่มต้นได้
-            flip_horizontal = random.choice([True, False])  # สุ่ม พลิกซ้าย-ขวา
-            flip_vertical = random.choice([True, False])    # สุ่ม พลิกบน-ล่าง
-            reverse_text = random.choice([True, False])     # สุ่ม อ่านจากหน้าไปหลัง หรือ หลังมาหน้า
+            flip_horizontal = random.choice([True, False])
+            flip_vertical = random.choice([True, False])
+            reverse_text = random.choice([True, False])
             
             transformed_coords = []
             for r, c in path_coords:
-                # คำนวณพิกัดใหม่ตามผลการสุ่มพลิกแกน
                 new_r = (n - 1 - r) if flip_vertical else r
                 new_c = (n - 1 - c) if flip_horizontal else c
                 transformed_coords.append((new_r, new_c))
                 
-            # ถ้าสุ่มได้อ่านย้อนกลับ ให้พลิกลำดับของลิสต์พิกัด
             if reverse_text:
                 transformed_coords.reverse()
                         
-            # ขั้นตอนที่ 3: นำพิกัดที่ผ่านการสุ่มทิศทางแล้ว ไปจับคู่เข้าตารางเวทมนตร์
             path_nums = [self.target_goal[r][c] for r, c in transformed_coords]
             self.num_to_char = {path_nums[i]: char_sequence[i] for i in range(n * n)}
-            
         else:
-            # 🔀 โหมด Random All (ระบบเดิม: สุ่มกระจายทั่วไปหมด)
             all_nums = list(range(1, self.n * self.n + 1))
             random.shuffle(all_nums) 
             self.num_to_char = {num: char_sequence[i] for i, num in enumerate(all_nums)}
@@ -246,7 +240,6 @@ class GameManager:
                 val = self.current_nums[r][c]
                 char = self.num_to_char.get(val, "")
                 
-                # เช็คสถานะว่าเป็นโหมดรูปภาพหรือไม่
                 is_image_mode = (self.visual_style == "Creative" and val in self.image_pieces)
                 
                 if is_image_mode:
@@ -254,42 +247,45 @@ class GameManager:
                     tk_img = ImageTk.PhotoImage(resized_img)
                     self.tk_images.append(tk_img)
                     self.canvas.create_image(x, y, anchor="nw", image=tk_img)
+                    self.canvas.create_rectangle(x, y, x+cell, y+cell, outline=self.creative_border_color, width=1)
                     
-                    # ตีเส้นขอบจางๆ เพื่อแบ่งบล็อกภาพให้ชัดเจนขึ้น
-                    self.canvas.create_rectangle(x, y, x+cell, y+cell, outline="#AEB6BF", width=1)
-                    text_color = "white"
+                    # เรียกใช้ชุดสีเฉพาะของ Creative จากคอนฟิกด้านบน
+                    num_color = self.creative_num_color
+                    char_color = self.creative_char_color
                 else:
+                    # ส่วนของโหมด Standard (ไม่เปลี่ยนแปลงใดๆ ทั้งสิ้นเพื่อคุมโทนเดิม)
                     bg_colors = ["#EBF5FB", "#FEF9E7", "#EAFAF1", "#F4ECF7"]
                     base_bg = bg_colors[(r + c) % len(bg_colors)]
                     bg = base_bg if (r, c) != self.selected else "#FBEEE6"
                     self.canvas.create_rectangle(x, y, x+cell, y+cell, fill=bg, outline="#AEB6BF", width=1)
-                    text_color = "#2E4053"
+                    
+                    num_color = "#2E4053"
+                    char_color = "#2E4053"
                 
-                # กรอบไฮไลท์สีแดงเมื่อเลือกช่อง
                 if (r, c) == self.selected:
                     self.canvas.create_rectangle(x, y, x+cell, y+cell, outline="#FF7676", width=4)
                 
-                # --- การตั้งค่าฟอนต์และตำแหน่งแบบ Classic ---
+                char_font_family = "Garamond"
+                if char:
+                    o = ord(char)
+                    if 0x2000 <= o <= 0x2BFF or char in "★☆◎◇◆○●▲▼■□☯⛩♪♬♻⛶⚦⚨⚔⚒⛭🕇↘↙↖↗♠♣♥♦♔♕♖♗♘♙⚙⚓⚖":
+                        char_font_family = "Segoe UI Symbol"
+                    elif o > 0xffff or char in ["🌟", "🚀", "🎈", "🍎", "🍊", "🍇", "🐶", "🐱", "⚽", "🏀", "🎨", "🎬", "🎸", "🍕", "🍦", "🛸"]:
+                        char_font_family = "Segoe UI Emoji"
+                    elif '\u3040' <= char <= '\u30ff' or '\u4e00' <= char <= '\u9fff':
+                        char_font_family = "MS Gothic"
+                    elif '\u0e00' <= char <= '\u0e7f':
+                        char_font_family = "Tahoma"
+
                 num_font = ("Garamond", int(cell * 0.15), "bold")
-                char_font = ("Garamond", int(cell * 0.45), "bold")
+                char_font = (char_font_family, int(cell * 0.45), "bold")
                 
-                # y ของตัวเลขอยู่ด้านบน (0.2) / y ของตัวอักษรอยู่ตรงกลาง (0.55)
                 num_y = y + cell * 0.2
                 char_y = y + cell * 0.55
-                
-                # เสริม: หากเป็นโหมดรูปภาพ ให้วาดเงาสีดำด้านหลังข้อความ เพื่อกันกลืนกับพื้นหลัง
-                if is_image_mode:
-                    shadow_offset = max(1, int(cell * 0.02))
-                    self.canvas.create_text(x + cell/2 + shadow_offset, num_y + shadow_offset, 
-                                            text=str(val), font=num_font, fill="black")
-                    self.canvas.create_text(x + cell/2 + shadow_offset, char_y + shadow_offset, 
-                                            text=char, font=char_font, fill="black")
 
-                # วาดข้อความจริงทับลงไป
-                self.canvas.create_text(x + cell/2, num_y, text=str(val), font=num_font, fill=text_color)
-                self.canvas.create_text(x + cell/2, char_y, text=char, font=char_font, fill=text_color)
+                self.canvas.create_text(x + cell/2, num_y, text=str(val), font=num_font, fill=num_color)
+                self.canvas.create_text(x + cell/2, char_y, text=char, font=char_font, fill=char_color)
 
-        # วาดตัวเลขผลรวมรอบๆ กระดาน (เหมือนเดิม)
         row_sums = [sum(row) for row in self.current_nums]
         col_sums = [sum(self.current_nums[r][ci] for r in range(n)) for ci in range(n)]
         diag1_sum = sum(self.current_nums[i][i] for i in range(n))       
@@ -298,8 +294,8 @@ class GameManager:
         for i in range(n):
             self.canvas.create_text(x0 + n*cell + 25, y0 + i*cell + cell/2, text=str(row_sums[i]), fill=("#27AE60" if row_sums[i] == M else "#E74C3C"), font=("Garamond", 14, "bold"))
             self.canvas.create_text(x0 + i*cell + cell/2, y0 - 25, text=str(col_sums[i]), fill=("#27AE60" if col_sums[i] == M else "#E74C3C"), font=("Garamond", 14, "bold"))
-        self.canvas.create_text(x0 - 35, y0 - 25, text=f"{diag1_sum} ↘", fill=("#27AE60" if diag1_sum == M else "#E74C3C"), font=("Garamond", 14, "bold"))
-        self.canvas.create_text(x0 + n*cell + 35, y0 - 25, text=f"↙ {diag2_sum}", fill=("#27AE60" if diag2_sum == M else "#E74C3C"), font=("Garamond", 14, "bold"))
+        self.canvas.create_text(x0 - 35, y0 - 25, text=f"{diag1_sum} ↘", fill=("#27AE60" if diag1_sum == M else "#E74C3C"), font=("Segoe UI Symbol", 14, "bold"))
+        self.canvas.create_text(x0 + n*cell + 35, y0 - 25, text=f"↙ {diag2_sum}", fill=("#27AE60" if diag2_sum == M else "#E74C3C"), font=("Segoe UI Symbol", 14, "bold"))
         self.check_win_status()
 
     def undo(self):
@@ -382,259 +378,205 @@ class GameManager:
         self.btn_submit.configure(text=texts.get("submit", "Submit"))
         self.redraw()
 
-    def export_to_pdf(self):
-        import math
-        import os
-        import datetime
-        from reportlab.pdfgen import canvas
-        from reportlab.lib.pagesizes import A4
-        from reportlab.pdfbase import pdfmetrics
-        from reportlab.pdfbase.ttfonts import TTFont
-        from reportlab.lib.utils import ImageReader
-
-        folder = "pdf"
+    def export_to_image(self):
+        folder = "certificates"
         if not os.path.exists(folder): 
             os.makedirs(folder)
             
-        # 🛡️ 1. ล้างตัวอักษรพิเศษออกจากชื่อไฟล์ ป้องกัน OSError จาก Emoji ในระบบปฏิบัติการ
-        safe_name = "".join(char for char in self.player_name if char.isalnum() or char in "._- ").strip()
-        if not safe_name:
+        # [ปรับปรุงเพื่อรองรับทุกภาษา] กรองเฉพาะตัวอักษรที่ระบบปฏิบัติการห้ามใช้ในชื่อไฟล์ออกเท่านั้น
+        # วิธีนี้จะทำให้ชื่อภาษาไทย ญี่ปุ่น อังกฤษ หรือช่องว่าง คงอยู่ครบถ้วนอย่างปลอดภัย
+        forbidden_chars = ['\\', '/', ':', '*', '?', '"', '<', '>', '|']
+        safe_name = "".join(char for char in self.player_name if char not in forbidden_chars).strip()
+        if not safe_name: 
             safe_name = "Player"
             
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"Result_{safe_name}_{self.n}x{self.n}_{self.visual_style}_{timestamp}.pdf"
+        # แยกข้อมูลวันที่และเวลาออกจากกันตามแพทเทิร์นที่กำหนด
+        now = datetime.datetime.now()
+        date_str = now.strftime("%Y%m%d")  # รูปแบบ: ปีเดือนวัน (เช่น 20260528)
+        time_str = now.strftime("%H%M%S")  # รูปแบบ: ชั่วโมงนาทีวินาที (เช่น 131530)
+        
+        # [ปรับปรุง] ตั้งชื่อไฟล์ตามแพทเทิร์น: Certificate_{Name}_{Size}_{Mode}_{Date}_{Time}.png
+        filename = f"Certificate_{safe_name}_{self.n}x{self.n}_{self.mode}_{date_str}_{time_str}.png"
         filepath = os.path.join(folder, filename)
 
-        # 📂 2. ระบบจัดการลงทะเบียนฟอนต์
-        font_folder = "fonts"
-        u_font = "Helvetica"  
-        
-        ttf_files = []
-        if os.path.exists(font_folder):
-            ttf_files = [f for f in os.listdir(font_folder) if f.lower().endswith('.ttf')]
-            if ttf_files:
-                main_font_file = ttf_files[0] 
-                for f in ttf_files:
-                    if "english" in f.lower():
-                        main_font_file = f
-                        break
-                        
-                try:
-                    pdfmetrics.registerFont(TTFont("MainCustomFont", os.path.join(font_folder, main_font_file)))
-                    u_font = "MainCustomFont"
-                except Exception as e:
-                    print(f"[PDF] Main Font Registration Error: {e}")
+        img_w, img_h = 1240, 1754
+        cert_img = Image.new("RGBA", (img_w, img_h), (255, 255, 255, 255))
+        draw = ImageDraw.Draw(cert_img)
 
-        def register_mode_font(font_name, keyword):
-            if ttf_files:
-                matched = [f for f in ttf_files if keyword.lower() in f.lower()]
-                target_file = matched[0] if matched else ttf_files[0]
-                try:
-                    pdfmetrics.registerFont(TTFont(font_name, os.path.join(font_folder, target_file)))
-                    return font_name
-                except Exception as e:
-                    print(f"ERROR: Could not register font {target_file}: {e}")
-            return "Helvetica"
+        # วาดพื้นหลัง Gradient ไล่โทนสุภาพเรียบร้อย
+        for y in range(img_h):
+            ratio = y / img_h
+            r_c = int(30 + ratio * 40)
+            g_c = int(30 + ratio * 20)
+            b_c = int(45 + ratio * 30)
+            draw.line([(0, y), (img_w, y)], fill=(r_c, g_c, b_c, 255))
 
-        thai_grid_font = register_mode_font("ThaiGridFont", "thai")
-        japan_grid_font = register_mode_font("JapanGridFont", "japan")
-        emoji_grid_font = register_mode_font("EmojiGridFont", "emoji")
-        symbol_grid_font = register_mode_font("SymbolGridFont", "symbol")
-        english_grid_font = register_mode_font("EnglishGridFont", "english")
+        # กรอบการ์ดสีขาวหลัก
+        card_margin = 50
+        draw.rounded_rectangle([card_margin, card_margin, img_w - card_margin, img_h - card_margin], radius=25, fill=(255, 255, 255, 255))
+        draw.rounded_rectangle([card_margin + 10, card_margin + 10, img_w - card_margin - 10, img_h - card_margin - 10], radius=20, outline=(30, 50, 80, 255), width=4)
 
-        # 🎨 3. เริ่มสร้าง PDF และดีไซน์กรอบใบประกาศฯ
-        c = canvas.Canvas(filepath, pagesize=A4)
-        width, height = A4
-        
-        c.setFillColorRGB(0.96, 0.97, 0.99) 
-        c.rect(0, 0, width, height, fill=1, stroke=0)
+        def load_font(font_key, size):
+            font_paths = {
+                "emoji": ["C:\\Windows\\Fonts\\seguiemj.ttf", "/System/Library/Fonts/Apple Color Emoji.ttc", "NotoColorEmoji.ttf", "tahoma.ttf"],
+                "symbol": ["C:\\Windows\\Fonts\\seguisym.ttf", "C:\\Windows\\Fonts\\msgothic.ttc", "/System/Library/Fonts/Supplemental/Apple Symbols.ttf", "tahoma.ttf"],
+                "thai": ["C:\\Windows\\Fonts\\tahoma.ttf", "C:\\Windows\\Fonts\\cordia.ttf", "/System/Library/Fonts/Supplemental/Tahoma.ttf"],
+                "japan": ["C:\\Windows\\Fonts\\msgothic.ttc", "/System/Library/Fonts/Supplemental/MS Gothic.ttc"],
+                "english": ["C:\\Windows\\Fonts\\georgiab.ttf", "C:\\Windows\\Fonts\\Garamond.ttf", "arial.ttf"]
+            }
+            for path in font_paths.get(font_key, []):
+                if os.path.exists(path):
+                    try: return ImageFont.truetype(path, size, layout_engine=ImageFont.Layout.BASIC)
+                    except:
+                        try: return ImageFont.truetype(path, size)
+                        except: pass
+            return ImageFont.load_default()
 
-        bg_path = "images/background.jpg"
-        if os.path.exists(bg_path):
-            try: c.drawImage(bg_path, 0, 0, width=width, height=height)
-            except: pass
+        def draw_mixed_text(text_str, x, y, size, fill_color, anchor="mm"):
+            fonts_map = {
+                "english": load_font("english", size),
+                "thai": load_font("thai", size),
+                "japan": load_font("japan", size),
+                "symbol": load_font("symbol", size),
+                "emoji": load_font("emoji", size)
+            }
             
-        c.setFillColorRGB(1, 1, 1)
-        c.roundRect(30, 30, width-60, height-60, 16, fill=1, stroke=0)
-        
-        c.setStrokeColorRGB(0.12, 0.23, 0.35) 
-        c.setLineWidth(2.5)
-        c.roundRect(36, 36, width-72, height-72, 12, fill=0, stroke=1)
-        
-        c.setStrokeColorRGB(0.85, 0.65, 0.25) 
-        c.setLineWidth(1)
-        c.roundRect(42, 42, width-84, height-84, 10, fill=0, stroke=1)
-
-# 🛠️ 4. ฟังก์ชันอัจฉริยะในการวาดข้อความแบบผสมภาษา (Adaptive Text Renderer - ปรับปรุงเพื่อโหมด Emoji)
-        def draw_mixed_text(canvas_obj, text, x, y, font_size, align="left", force_emoji_mode=False):
-            segments = []
-            for char in text:
-                # 1. หากเปิดโหมด Emoji หรือเป็นตัวอักษร Emoji ให้บังคับใช้ฟอนต์ Emoji ทันที
-                if force_emoji_mode or ord(char) > 0xffff or '\u2600' <= char <= '\u27bf' or '\u1f300' <= char <= '\u1f9ff':
-                    f = emoji_grid_font
-                # 2. ภาษาไทย
-                elif '\u0e00' <= char <= '\u0e7f':
-                    f = thai_grid_font
-                # 3. ภาษาญี่ปุ่น
-                elif '\u3040' <= char <= '\u30ff' or '\u4e00' <= char <= '\u9fff':
-                    f = japan_grid_font
-                # 4. สัญลักษณ์พิเศษ (เช่น ดาว, ลูกศร)
-                elif ord(char) > 0x2000:
-                    f = symbol_grid_font
-                # 5. ภาษาอังกฤษและตัวเลขทั่วไป
+            char_data = []
+            total_w = 0
+            for ch in text_str:
+                o = ord(ch)
+                if 0x0E00 <= o <= 0x0E7F:
+                    ftype = "thai"
+                elif 0x3040 <= o <= 0x30FF or 0x4E00 <= o <= 0x9FFF or 0xFF00 <= o <= 0xFFEF:
+                    ftype = "japan"
+                elif 0x2000 <= o <= 0x2BFF or ch in "★☆◎◇◆○●▲▼■□☯⛩♪♬♻⛶⚦⚨⚔⚒⛭🕇↘↙↖↗♠♣♥♦♔♕♖♗♘♙⚙⚓⚖":
+                    ftype = "symbol"
+                elif o > 0xFFFF:
+                    ftype = "emoji"
                 else:
-                    f = english_grid_font
-                segments.append((char, f))
-            
-            # คำนวณความกว้างรวมเพื่อรองรับ Alignment ป้องกันตัวหนังสือเบี้ยว
-            total_width = 0
-            for char, f in segments:
-                try:
-                    total_width += canvas_obj.stringWidth(char, f, font_size)
-                except Exception:
-                    total_width += canvas_obj.stringWidth("?", "Helvetica", font_size)
-            
-            current_x = x
-            if align == "center":
-                current_x = x - total_width / 2
-            elif align == "right":
-                current_x = x - total_width
+                    ftype = "english"
                 
-            # วาดตัวอักษรทีละตัวลงบน Canvas
-            for char, f in segments:
-                try:
-                    canvas_obj.setFont(f, font_size)
-                    canvas_obj.drawString(current_x, y, char)
-                    current_x += canvas_obj.stringWidth(char, f, font_size)
-                except Exception:
-                    # หากเกิดข้อผิดพลาด ให้ลองใช้ Helvetica สำรอง
-                    try:
-                        canvas_obj.setFont("Helvetica", font_size)
-                        canvas_obj.drawString(current_x, y, "?")
-                        current_x += canvas_obj.stringWidth("?", "Helvetica", font_size)
-                    except Exception:
-                        pass
+                f = fonts_map[ftype]
+                try: w = draw.textlength(ch, font=f)
+                except: w = f.getbbox(ch)[2] - f.getbbox(ch)[0] if hasattr(f, "getbbox") else 12
+                
+                char_data.append((ch, f, w))
+                total_w += w
+            
+            if anchor == "mm":
+                curr_x = x - total_w / 2
+            elif anchor == "rm":
+                curr_x = x - total_w
+            else:
+                curr_x = x
 
-        # 🏛️ 5. วาดส่วนหัวข้อความเกียรติบัตร (เรียกใช้ฟังก์ชันดึงตัวอักษรผสมป้องกันเครื่องหมาย ★ พัง)
-        c.setFillColorRGB(0.12, 0.23, 0.35) 
-        draw_mixed_text(c, "CONGRATULATIONS!", width/2, height-110, 30, align="center")
-        
-        c.setFillColorRGB(0.85, 0.62, 0.15) 
-        draw_mixed_text(c, "★ Magic Square Master Completion Certificate ★", width/2, height-140, 15, align="center")
+            for ch, f, w in char_data:
+                draw.text((curr_x, y), ch, font=f, fill=fill_color, anchor="lm")
+                curr_x += w
 
-        # 📐 6. คำนวณพิกัดกระดาน (Grid Setup)
-        grid_size = 280
-        start_x = (width - grid_size) / 2
-        start_y = (height - grid_size) / 2 + 15  
+            return total_w
+
+        # หัวข้อใบเซอร์ด้านบน
+        draw_mixed_text("CONGRATULATIONS!", img_w / 2, 200, 64, (30, 50, 80, 255), anchor="mm")
+        draw_mixed_text("Magic Square Master Completion Certificate", img_w / 2, 270, 28, (194, 130, 12, 255), anchor="mm")
+
+        # ตารางปริศนา
+        grid_size = 580
+        start_x = (img_w - grid_size) / 2
+        start_y = 420  
         cell_size = grid_size / self.n
         M = self.n * (self.n * self.n + 1) // 2
 
-        c.setFillColorRGB(0.93, 0.95, 0.98)
-        c.setStrokeColorRGB(0.75, 0.8, 0.85)
-        c.setLineWidth(1.5)
-        c.roundRect(start_x-10, start_y-10, grid_size+20, grid_size+20, 8, fill=1, stroke=1)
+        # พื้นหลังแผงตารางปริศนา
+        draw.rounded_rectangle([start_x - 15, start_y - 15, start_x + grid_size + 15, start_y + grid_size + 15], radius=12, fill=(244, 246, 249, 255), outline=(210, 218, 226, 255), width=2)
 
-        # 🎯 7. แสดงผลรวมตัวเลขรอบกระดาน
-        c.setFillColorRGB(0.15, 0.55, 0.25) 
+        # วาดผลรวมแนวตั้งและแนวนอนรอบตาราง
         for i in range(self.n):
             rs = sum(self.current_nums[i])
             cs = sum(self.current_nums[r][i] for r in range(self.n))
-            
-            row_y_center = start_y + (self.n - 1 - i + 0.5) * cell_size
-            draw_mixed_text(c, f"{rs}", start_x + grid_size + 15, row_y_center - 5, 14, align="left")
-            
-            col_x_center = start_x + (i + 0.5) * cell_size
-            draw_mixed_text(c, f"{cs}", col_x_center, start_y + grid_size + 12, 14, align="center")
-            
+            draw_mixed_text(str(rs), start_x + grid_size + 50, start_y + (i + 0.5) * cell_size, 24, (39, 174, 96, 255) if rs == M else (231, 76, 60, 255), anchor="mm")
+            draw_mixed_text(str(cs), start_x + (i + 0.5) * cell_size, start_y - 45, 24, (39, 174, 96, 255) if cs == M else (231, 76, 60, 255), anchor="mm")
+
         diag1_sum = sum(self.current_nums[i][i] for i in range(self.n))
-        c.setFillColorRGB(0.75, 0.15, 0.45) 
-        draw_mixed_text(c, f"{diag1_sum} ↘", start_x - 15, start_y + grid_size + 12, 14, align="right")
+        diag2_sum = sum(self.current_nums[i][self.n - 1 - i] for i in range(self.n))
+        
+        draw_mixed_text(f"{diag1_sum} ↘", start_x - 60, start_y - 45, 24, (39, 174, 96, 255) if diag1_sum == M else (231, 76, 60, 255), anchor="mm")
+        draw_mixed_text(f"↙ {diag2_sum}", start_x + grid_size + 60, start_y - 45, 24, (39, 174, 96, 255) if diag2_sum == M else (231, 76, 60, 255), anchor="mm")
 
-        diag2_sum = sum(self.current_nums[i][self.n-1-i] for i in range(self.n))
-        draw_mixed_text(c, f"↙ {diag2_sum}", start_x + grid_size + 15, start_y + grid_size + 12, 14, align="left")
+        bg_colors_hex = ["#EBF5FB", "#FEF9E7", "#EAFAF1", "#F4ECF7"]
+        def hex_to_rgb(hex_str):
+            h = hex_str.lstrip('#')
+            return tuple(int(h[i:i+2], 16) for i in (0, 2, 4)) + (255,)
 
-        # 🧱 8. การวาดบล็อกแต่ละช่องและตัวอักษรในตาราง
+        # ลูปวาดช่องในตาราง
         for r in range(self.n):
             for ci in range(self.n):
-                x = start_x + ci * cell_size
-                y = start_y + (self.n - 1 - r) * cell_size
+                x_pos = start_x + ci * cell_size
+                y_pos = start_y + r * cell_size
                 val = self.current_nums[r][ci]
+                char = self.num_to_char.get(val, "")
                 
                 is_image_mode = (self.visual_style == "Creative" and val in self.image_pieces)
                 
                 if is_image_mode:
-                    img_data = self.image_pieces[val]
-                    c.drawImage(ImageReader(img_data), x + 1.5, y + 1.5, 
-                                width=cell_size - 3, height=cell_size - 3, mask='auto')
+                    piece_img = self.image_pieces[val].resize((int(cell_size - 4), int(cell_size - 4)), Image.LANCZOS)
+                    cert_img.paste(piece_img, (int(x_pos + 2), int(y_pos + 2)), piece_img if piece_img.mode == "RGBA" else None)
+                    num_col = hex_to_rgb(self.creative_num_color)
+                    char_col = hex_to_rgb(self.creative_char_color)
                 else:
-                    if (r + ci) % 2 == 0: c.setFillColorRGB(0.99, 0.98, 0.93)
-                    else: c.setFillColorRGB(0.94, 0.96, 0.99)
-                    c.roundRect(x + 1.5, y + 1.5, cell_size - 3, cell_size - 3, 6, fill=1, stroke=0)
-                
-                c.setStrokeColorRGB(0.72, 0.78, 0.84)
-                c.rect(x, y, cell_size, cell_size, fill=0, stroke=1)
-                
-                txt_col = (1, 1, 1) if is_image_mode else (0.15, 0.22, 0.35)
-                c.setFillColorRGB(*txt_col)
-                draw_mixed_text(c, str(val), x + cell_size * 0.15, y + cell_size * 0.85, int(cell_size * 0.15), align="center")
-                
-# (โค้ดส่วนอื่นคงเดิมในหัวข้อ 8 จนถึงจุดวาดตัวอักษรด้านล่าง)
-                char = self.num_to_char.get(val, "")
-                size_char = int(cell_size * 0.40)
-                char_y_pos = y + cell_size * 0.30
-                
-                c.setFillColorRGB(0, 0, 0)
-                
-                # 🛠️ ส่งค่าตรวจสอบโหมดไปยัง Adaptive Renderer เพื่อเลือกฟอนต์ตามโหมดหลักได้แม่นยำขึ้น
-                is_emoji_game = (self.mode == "Emoji")
-                draw_mixed_text(c, str(char), x + cell_size/2, char_y_pos, size_char, align="center", force_emoji_mode=is_emoji_game)
+                    bg_color_pick = bg_colors_hex[(r + ci) % len(bg_colors_hex)]
+                    bg_cell_color = hex_to_rgb(bg_color_pick)
+                    draw.rectangle([x_pos + 2, y_pos + 2, x_pos + cell_size - 2, y_pos + cell_size - 2], fill=bg_cell_color)
+                    num_col = (46, 64, 83, 255)
+                    char_col = (46, 64, 83, 255)
 
-        # 📊 9. การ์ดแผงสรุปสถิติด้านล่าง (Stats Panel)
-        badge_y = 100
-        badge_w, badge_h = 140, 52
-        gap = 16
-        start_badge_x = (width - (badge_w * 3 + gap * 2)) / 2
-        
+                draw.rectangle([x_pos, y_pos, x_pos + cell_size, y_pos + cell_size], outline=(174, 182, 191, 255), width=1)
+
+                num_y_offset = y_pos + cell_size * 0.22
+                char_y_offset = y_pos + cell_size * 0.60
+                
+                draw_mixed_text(str(val), x_pos + cell_size / 2, num_y_offset, int(cell_size * 0.15), num_col, anchor="mm")
+                draw_mixed_text(str(char), x_pos + cell_size / 2, char_y_offset, int(cell_size * 0.44), char_col, anchor="mm")
+
+        # แผงข้อมูลผู้เล่นด้านล่าง
+        badge_y = 1260  
+        badge_w, badge_h = 320, 115
+        badge_gap = 40
+        start_badge_x = (img_w - (badge_w * 3 + badge_gap * 2)) / 2
+
         stats_summary = [
-            ("PLAYER NAME", self.player_name if self.player_name else "Guest", (0.85, 0.62, 0.15)),
-            ("TOTAL MOVES", f"{self.move_count} Steps", (0.15, 0.55, 0.25)),
-            ("GAME MODE", f"{self.mode}", (0.18, 0.45, 0.73))
+            ("PLAYER NAME", self.player_name if self.player_name else "Guest", (194, 130, 12, 255)),
+            ("TOTAL MOVES", f"{self.move_count} Steps", (39, 174, 96, 255)),
+            ("GAME MODE", f"{self.mode}", (41, 128, 185, 255))
         ]
-        
-        for idx, (label_title, value_desc, card_color) in enumerate(stats_summary):
-            bx = start_badge_x + idx * (badge_w + gap)
-            c.setFillColorRGB(0.97, 0.98, 0.99)
-            c.roundRect(bx, badge_y, badge_w, badge_h, 6, fill=1, stroke=0)
-            
-            c.setFillColorRGB(*card_color)
-            c.roundRect(bx, badge_y, 5, badge_h, 1.5, fill=1, stroke=0)
-            
-            c.setFillColorRGB(0.45, 0.5, 0.55)
-            draw_mixed_text(c, label_title, bx + 15, badge_y + 35, 8, align="left")
-            
-            c.setFillColorRGB(0.15, 0.2, 0.25)
-            # เรียกใช้ Adaptive Text Renderer กับชื่อผู้เล่นและข้อมูลสถิติทั้งหมดเพื่อความปลอดภัยสูงสุด
-            draw_mixed_text(c, str(value_desc), bx + 15, badge_y + 14, 12, align="left")
 
-        # 🕒 10. สรุปผลเวลาด้านขวาล่าง
+        for idx, (title, desc, color_theme) in enumerate(stats_summary):
+            bx = start_badge_x + idx * (badge_w + badge_gap)
+            draw.rounded_rectangle([bx, badge_y, bx + badge_w, badge_y + badge_h], radius=12, fill=(248, 249, 250, 255))
+            draw.rounded_rectangle([bx, badge_y, bx + 12, badge_y + badge_h], radius=4, fill=color_theme)
+            
+            draw_mixed_text(title, bx + 35, badge_y + 35, 20, (100, 110, 120, 255), anchor="lm")
+            draw_mixed_text(desc, bx + 35, badge_y + 78, 25, (30, 30, 30, 255), anchor="lm")
+
         p_minutes = self.elapsed_time // 60
         p_seconds = self.elapsed_time % 60
         time_taken_str = f"{p_minutes:02d}:{p_seconds:02d}"
-        completed_on_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        
-        c.setFillColorRGB(0.5, 0.55, 0.6)
-        draw_mixed_text(c, f"Time Elapsed: {time_taken_str}", width - 45, 70, 8, align="right")
-        draw_mixed_text(c, f"Completed Date: {completed_on_str}", width - 45, 58, 8, align="right")
-        
-        c.save()
+        completed_on_str = now.strftime("%Y-%m-%d %H:%M:%S")
 
-        # เปิดแสดงไฟล์ PDF ทันที
-        from tkinter import messagebox
+        # วันที่และเวลาขวาล่างสุด
+        draw_mixed_text(f"Time Elapsed: {time_taken_str}", img_w - 90, 1580, 16, (120, 130, 140, 255), anchor="rm")
+        draw_mixed_text(f"Completed Date: {completed_on_str}", img_w - 90, 1615, 16, (120, 130, 140, 255), anchor="rm")
+    
+        final_cert = cert_img.convert("RGB")
+        final_cert.save(filepath, "PNG")
+
         try:
             if os.name == 'nt': os.startfile(filepath)
             else: os.system(f'open "{filepath}"')
         except: pass
-        messagebox.showinfo("Export Success", f"บันทึกไฟล์เกียรติบัตรเรียบร้อยที่โฟลเดอร์ pdf:\n{filename}")
+        
+        texts = LANG_DB.get(self.get_lang(), LANG_DB["English"])
+        messagebox.showinfo(texts["cert_success_title"], f"{texts['cert_success_msg']}\n{filename}")
 
     def submit_game(self):
         n, M = self.n, self.n * (self.n * self.n + 1) // 2
@@ -645,52 +587,62 @@ class GameManager:
         if not is_magic:
             messagebox.showwarning("Result", "Magic Square not completed yet!")
             return
-            
-        # 👑 1. คำนวณระบบคะแนนตามที่วางแผนไว้
-        base_scores = {3: 2000, 4: 5000, 5: 10000}
-        base = base_scores.get(self.n, 2000)
-        
-        # ตัวคูณตามระดับความยากของทิศทางคำ
-        pattern_multipliers = {
-            "Horizontal": 1.0,
-            "Vertical": 1.1,
-            "Diagonal": 1.3,
-            "Random All": 1.5
+
+        pattern_base_scores = {
+            "Horizontal": 15000, "Vertical": 15000, "Diagonal": 22500, "Random All": 30000
         }
-        multiplier = pattern_multipliers.get(getattr(self, 'arrange_mode', 'Random All'), 1.5)
+        target_pattern = getattr(self, 'arrange_mode', "Random All")
+        base_score = pattern_base_scores.get(target_pattern, 30000)
+        penalty = (self.elapsed_time * 2) + (self.move_count * 5) + (self.hint_count * 100)
+        final_score = max(base_score - penalty, 100)
         
-        # สูตรหักคะแนน Penalties
-        calc_score = int((base * multiplier) - (self.elapsed_time * 2) - (self.move_count * 5) - (self.hint_count * 100))
-        final_score = max(calc_score, 100) # บังคับขั้นต่ำให้ผู้เล่นได้ 100 คะแนน เผื่อเวลาติดลบเพื่อเป็นแรงใจสู้ต่อ
-        
-        # 📝 2. บันทึกข้อมูลลงฐานข้อมูลไฟล์ JSON
+        target_style = "Creative" if self.visual_style == "Image" else "Standard"
         json_file = "leaderboard.json"
         data = []
         if os.path.exists(json_file):
             try:
                 with open(json_file, "r", encoding="utf-8") as f:
                     data = json.load(f)
-            except:
-                data = []
+            except: data = []
                 
-        # โครงสร้างตัวแปรเก็บสถิติ
-        new_record = {
-            "name": self.player_name if self.player_name else "Guest",
-            "style": self.visual_style,       # "Standard" หรือ "Image" (Creative)
-            "size": f"{self.n}x{self.n}",    # "3x3", "4x4", "5x5"
-            "score": final_score,
-            "time": self.elapsed_time,
-            "moves": self.move_count,
-            "pattern": getattr(self, 'arrange_mode', 'Random All'),
-            "date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-        }
-        data.append(new_record)
+        player_name = self.player_name if self.player_name else "Guest"
+        target_size = f"{self.n}x{self.n}"
         
+        found = False
+        for item in data:
+            if (item.get("name") == player_name and 
+                item.get("style") == target_style and 
+                item.get("size") == target_size and 
+                item.get("pattern") == target_pattern and
+                item.get("mode") == self.mode):
+                found = True
+                if final_score > item.get("score", 0):
+                    item.update({
+                        "score": final_score,
+                        "time": self.elapsed_time,
+                        "moves": self.move_count,
+                        "date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+                    })
+                break 
+                
+        if not found:
+            new_record = {
+                "name": player_name,
+                "style": target_style,
+                "size": target_size,
+                "pattern": target_pattern,
+                "mode": self.mode,
+                "score": final_score,
+                "time": self.elapsed_time,
+                "moves": self.move_count,
+                "date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+            }
+            data.append(new_record)
+            
         with open(json_file, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
 
-        # ทำกระบวนการส่งออกเกียรติบัตรตัวเดิมต่อ
-        self.export_to_pdf() 
+        self.export_to_image() 
         self.on_finish()
 
     def update_timer(self):
@@ -708,6 +660,6 @@ class GameManager:
 
     def instant_win(self):
         self.current_nums = [row[:] for row in self.target_goal]
-        self.move_count += 99  
+        self.move_count = 99  
         self.redraw()
         self.check_win_status()
