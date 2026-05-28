@@ -596,7 +596,7 @@ class GameManager:
         penalty = (self.elapsed_time * 2) + (self.move_count * 5) + (self.hint_count * 100)
         final_score = max(base_score - penalty, 100)
         
-        target_style = "Creative" if self.visual_style == "Image" else "Standard"
+        target_style = "Standard" if self.visual_style == "Standard" else "Creative"
         json_file = "leaderboard.json"
         data = []
         if os.path.exists(json_file):

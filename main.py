@@ -5,7 +5,7 @@ import tkinter as tk
 from tkinter import messagebox
 from PIL import Image
 from game_manager import GameManager
-from constants import LANG_DB, MODE_OPTIONS, MODE_TO_ENGLISH, BTN_STYLES # [แก้ไข] นำเข้า BTN_STYLES
+from constants import LANG_DB, MODE_OPTIONS, MODE_TO_ENGLISH, BTN_STYLES 
 
 # ----------------- App Initialization -----------------
 app = ctk.CTk()
@@ -55,8 +55,19 @@ def show_select():
 
 def validate_and_submit():
     texts = LANG_DB[current_language]
-    if not name_entry.get().strip():
+    name = name_entry.get().strip()
+    
+    if not name:
         messagebox.showwarning(texts["submit_name_title_error"], texts["submit_name_error"])
+        return
+    
+    if len(name) > 15:
+        if current_language == "ไทย":
+            messagebox.showwarning("ข้อผิดพลาด", "ชื่อผู้ใช้ต้องยาวไม่เกิน 15 ตัวอักษร !")
+        elif current_language == "日本語":
+            messagebox.showwarning("エラー", "名前は15文字以内にする必要があります！")
+        else:
+            messagebox.showwarning("Error", "Name must be 15 characters or less!")
         return
     
     if style_var.get() == "Creative": 
@@ -74,10 +85,20 @@ def start_magic_game(image_path=None):
     selected_mode_text = mode_menu.get()
     chosen_mode_eng = MODE_TO_ENGLISH.get(selected_mode_text, "English")
     
-    visual_style = style_var.get() 
-    arrange_mode = arrange_menu.get() # 
+    if image_path is not None:
+        visual_style = "Creative"
+    else:
+        visual_style = style_var.get() 
     
-    game_manager.start_new_game(player_name, size, chosen_mode_eng, image_path, visual_style, arrange_mode)
+    selected_pattern_text = arrange_menu.get()
+    pattern_mapping = {
+        "แนวนอน": "Horizontal", "แนวตั้ง": "Vertical", "แนวเฉียง": "Diagonal", "สุ่มทั้งหมด": "Random All",
+        "水平": "Horizontal", "垂直": "Vertical", "対角線": "Diagonal", "すべてシャッフル": "Random All",
+        "Horizontal": "Horizontal", "Vertical": "Vertical", "Diagonal": "Diagonal", "Random All": "Random All"
+    }
+    chosen_pattern_eng = pattern_mapping.get(selected_pattern_text, "Horizontal")
+    
+    game_manager.start_new_game(player_name, size, chosen_mode_eng, image_path, visual_style, chosen_pattern_eng)
     show_game()
 
 def show_goodbye():
@@ -124,26 +145,30 @@ def update_all_ui():
     btn_standard.configure(text=texts["btn_standard"])
     btn_creative.configure(text=texts["btn_creative"])
 
-    # --- [ส่วนแก้ไขรองรับ 3 ภาษา] ---
+    old_pattern_text = arrange_menu.get()
+    reverse_pattern_mapping = {
+        "Horizontal": 0, "แนวนอน": 0, "水平": 0,
+        "Vertical": 1, "แนวตั้ง": 1, "垂直": 1,
+        "Diagonal": 2, "แนวเฉียง": 2, "対角線": 2,
+        "Random All": 3, "สุ่มทั้งหมด": 3, "すべてシャッフル": 3
+    }
+    old_index = reverse_pattern_mapping.get(old_pattern_text, 0)
+
     arrange_label_ui.configure(text=texts.get("pattern_label", "Pattern : "))
-    
-    # อัปเดตรายการตัวเลือกใน OptionMenu เป็นภาษาปัจจุบัน
-    current_options = texts.get("pattern_options", ["Random All", "Horizontal", "Vertical", "Diagonal"])
+    current_options = texts.get("pattern_options", ["Horizontal", "Vertical", "Diagonal", "Random All"])
     arrange_menu.configure(values=current_options)
-    arrange_menu.set(current_options[0])
+    arrange_menu.set(current_options[old_index])
     
-    # อัปเดตข้อความบนปุ่มฟิลเตอร์ในหน้า Leaderboard ให้สลับภาษาตามไปด้วย
     lb_title.configure(text=f"🏅 {texts['leaderboard'].upper()} 🏅")
     
-    pattern_labels = texts.get("pattern_options", ["Random All", "Horizontal", "Vertical", "Diagonal"])
+    pattern_labels = texts.get("pattern_options", ["Horizontal", "Vertical", "Diagonal", "Random All"])
     all_text = texts.get("all_patterns", "🌐 All Patterns")
     
-    # อัปเดต Text ปุ่มบน Leaderboard
     pattern_buttons["All"].configure(text=all_text)
-    pattern_buttons["Horizontal"].configure(text=f"➡️ {pattern_labels[1]}")
-    pattern_buttons["Vertical"].configure(text=f"⬇️ {pattern_labels[2]}")
-    pattern_buttons["Diagonal"].configure(text=f"↘️ {pattern_labels[3]}")
-    pattern_buttons["Random All"].configure(text=f"🔀 {pattern_labels[0]}")
+    pattern_buttons["Horizontal"].configure(text=f"➡️ {pattern_labels[0]}")
+    pattern_buttons["Vertical"].configure(text=f"⬇️ {pattern_labels[1]}")
+    pattern_buttons["Diagonal"].configure(text=f"↘️ {pattern_labels[2]}")
+    pattern_buttons["Random All"].configure(text=f"🔀 {pattern_labels[3]}")
 
     update_style_desc()
     lb_back_btn.configure(text=texts["cancel"])
@@ -156,8 +181,8 @@ def update_all_ui():
     current_selected_eng = MODE_TO_ENGLISH.get(current_selected_local, "English")
     new_values = MODE_OPTIONS[current_language]
     mode_menu.configure(values=new_values)
-    old_index = MODE_OPTIONS["English"].index(current_selected_eng)
-    mode_menu.set(new_values[old_index])
+    old_mode_index = MODE_OPTIONS["English"].index(current_selected_eng)
+    mode_menu.set(new_values[old_mode_index])
     
     game_manager.update_ui_language()
 
@@ -202,7 +227,6 @@ try:
     ctk.CTkLabel(start_card, text="", image=square_img).pack(pady=20)
 except Exception: pass
 
-# [แก้ไขใช้ BTN_STYLES]
 start_btn = ctk.CTkButton(start_card, text="Start !", command=show_info, width=160, height=45, **BTN_STYLES["primary"])
 start_btn.pack(pady=(10, 10))
 
@@ -212,7 +236,17 @@ lb_btn.pack(pady=(10, 10))
 exit_btn = ctk.CTkButton(start_card, text="Exit", command=end, width=160, height=45, **BTN_STYLES["exit"])
 exit_btn.pack(pady=(10, 10))
 
+
 # ----------------- UI: Info (Page 2) -----------------
+# [แก้ไขเพิ่มตัวแปรและฟังก์ชันจำกัดความยาวของอักษรไว้ที่ตรงนี้]
+def limit_name_length(*args):
+    value = name_var.get()
+    if len(value) > 15:
+        name_var.set(value[:15])
+
+name_var = ctk.StringVar()
+name_var.trace_add("write", limit_name_length)
+
 info = ctk.CTkFrame(app, fg_color="#2b2b2b")
 if bg_img:
     ctk.CTkLabel(info, text="", image=bg_img).place(x=0, y=0, relwidth=1, relheight=1)
@@ -227,7 +261,8 @@ form_frame.pack(pady=10)
 
 name_label_ui = ctk.CTkLabel(form_frame, text="Name : ", font=("Garamond", 18), text_color="black")
 name_label_ui.grid(row=0, column=0, sticky="e", pady=15, padx=(0, 10))
-name_entry = ctk.CTkEntry(form_frame, width=220, height=35, fg_color="#eaeaea", text_color="black", border_color="black", border_width=1, corner_radius=0)
+
+name_entry = ctk.CTkEntry(form_frame, width=220, height=35, textvariable=name_var, fg_color="#eaeaea", text_color="black", border_color="black", border_width=1, corner_radius=0)
 name_entry.grid(row=0, column=1, sticky="w")
 
 size_label_ui = ctk.CTkLabel(form_frame, text="Size : ", font=("Garamond", 18), text_color="black")
@@ -248,7 +283,6 @@ mode_menu.set("English")
 arrange_label_ui = ctk.CTkLabel(form_frame, text="Pattern : ", font=("Garamond", 18), text_color="black")
 arrange_label_ui.grid(row=3, column=0, sticky="e", pady=15, padx=(0, 10))
 
-# มีให้เลือกสุ่มทั้งหมด, แนวนอน, แนวตั้ง, แนวเฉียง
 arrange_menu = ctk.CTkOptionMenu(
     form_frame, 
     values=["Horizontal", "Vertical", "Diagonal", "Random All"],     
@@ -264,7 +298,6 @@ style_label_ui.grid(row=4, column=0, sticky="e", pady=15, padx=(0, 10))
 
 style_var = ctk.StringVar(value="Standard")
 
-# ----------------- ส่วน UI ปุ่ม Style ที่สวยงามขึ้น -----------------
 style_btn_frame = ctk.CTkFrame(form_frame, fg_color="transparent")
 style_btn_frame.grid(row=4, column=1, sticky="w", pady=15)
 
@@ -279,20 +312,17 @@ def select_style(choice):
     
     update_style_desc() 
 
-# ปุ่ม Standard
 btn_standard = ctk.CTkButton(style_btn_frame, text="Standard", font=("Garamond", 15, "bold"),
                              width=110, height=36, corner_radius=5,
                              fg_color="#A9A3FA", text_color="white", hover_color="#3A5A78",
                              command=lambda: select_style("Standard"))
 btn_standard.pack(side="left", padx=(0, 10))
 
-# ปุ่ม Creative
 btn_creative = ctk.CTkButton(style_btn_frame, text="Creative", font=("Garamond", 15, "bold"),
                              width=110, height=36, corner_radius=5,
                              fg_color="#eaeaea", text_color="black", hover_color="#d4d4d4",
                              command=lambda: select_style("Creative"))
 btn_creative.pack(side="left")
-# ----------------------------------------------------------------
 
 style_desc_label = ctk.CTkLabel(info_card, text="", font=("Garamond", 14), text_color="gray", wraplength=400)
 style_desc_label.pack(pady=(0, 10))
@@ -334,7 +364,6 @@ for i, img_path in enumerate(image_paths):
     except Exception:
         print(f"Warning: Missing image file {img_path}")
 
-# [แก้ไขใช้ BTN_STYLES]
 select_cancel_btn = ctk.CTkButton(select_card, text="Cancel", width=140, height=45, command=show_info, **BTN_STYLES["cancel"])
 select_cancel_btn.pack(pady=(20, 20), padx=50, anchor="sw")
 
@@ -356,7 +385,6 @@ if bg_img:
 goodbye_card = ctk.CTkFrame(goodbye, fg_color="white", corner_radius=0, border_width=0)
 goodbye_card.place(relx=0.5, rely=0.5, anchor="center", relwidth=0.75, relheight=0.75)
 
-# แยกการสร้างและ pack ออกจากกัน เพื่อไม่ให้ตัวแปรกลายเป็น None
 goodbye_con = ctk.CTkLabel(goodbye_card, text="🎉 Congratulations! 🎉", font=("Garamond", 35, "bold"), text_color="#2e7d32")
 goodbye_con.pack(pady=(80, 20))
 
@@ -370,64 +398,31 @@ try:
 except Exception: 
     pass
 
-# [แก้ไขใช้ BTN_STYLES]
 goodbye_button = ctk.CTkButton(goodbye_card, text="Thank you !", width=200, height=50, command=restart_app, **BTN_STYLES["primary"])
 goodbye_button.pack(pady=(20, 40))
 
-# -------------------- UI: Leaderboard (Modern Premium Style) -----------------
+# -------------------- UI: Leaderboard -----------------
 import json
 import os
 
-# --- การตั้งค่าธีมสีและฟอนต์หลัก (UI Global Theme) ---
-FONT_FAMILY = "Segoe UI"  # ฟอนต์สไตล์โมเดิร์น สะอาดตา (หรือใช้ Arial, Helvetica ได้)
-COLOR_PRIMARY = "#4F46E5"    # สี Indigo หลักสำหรับปุ่มที่เลือก
-COLOR_INACTIVE = "#E2E8F0"   # สีเทาอ่อนสำหรับปุ่มทั่วไป
-COLOR_TEXT_MAIN = "#1E293B"  # สีตัวอักษรเข้มหลัก
-COLOR_TEXT_MUTED = "#64748B" # สีตัวอักษรจาง / รายละเอียดรอง
+FONT_FAMILY = "Segoe UI" 
 
-# สีไฮไลต์พิเศษสำหรับผู้ชนะ Top 3 (สร้างออร่าความสำเร็จ)
-RANK_THEMES = {
-    1: {"bg": "#FEF3C7", "text": "#B45309", "icon": "👑 1"},  # Gold Accent
-    2: {"bg": "#F1F5F9", "text": "#475569", "icon": "🥈 2"},  # Silver Accent
-    3: {"bg": "#FFEDD5", "text": "#9A3412", "icon": "🥉 3"}   # Bronze Accent
-}
-
-leaderboard = ctk.CTkFrame(app, fg_color="#1E1E24") # เปลี่ยนพื้นหลังหลักให้ดูลึกมีมิติขึ้น
-if bg_img:
-    ctk.CTkLabel(leaderboard, text="", image=bg_img).place(x=0, y=0, relwidth=1, relheight=1)
-
-# ปรับการ์ดหลักให้โค้งมนและดูพรีเมียมขึ้น
-leaderboard_card = ctk.CTkFrame(leaderboard, fg_color="#FFFFFF", corner_radius=16, border_width=0)
-leaderboard_card.place(relx=0.5, rely=0.5, anchor="center", relwidth=0.85, relheight=0.82)
-
-current_filter_style = "Standard"
-current_filter_size = "3x3"
-current_filter_pattern = "All" 
-
-# -------------------- UI: Leaderboard (Premium Card Outline Style) -----------------
-import json
-import os
-
-FONT_FAMILY = "Segoe UI" # ฟอนต์คลีนอ่านง่าย สไตล์เดียวกับในรูป
-
-# กำหนดสไตล์การ์ดแถวตามอันดับ (ถอดรหัสสีจากรูปภาพเป๊ะๆ)
 RANK_CONFIG = {
-    1: {"fg": "#FFFDF2", "border": "#FCD34D", "text": "#D97706", "rank_str": "🥇 1st"}, # โทนทองเหลืองอ่อน
-    2: {"fg": "#F8FAFC", "border": "#CBD5E1", "text": "#475569", "rank_str": "🥈 2nd"}, # โทนเงิน/เทาคลีน
-    3: {"fg": "#FFF7ED", "border": "#FDBA74", "text": "#C2410C", "rank_str": "🥉 3rd"}  # โทนทองแดง/ส้มอิฐ
+    1: {"fg": "#FFFDF2", "border": "#FCD34D", "text": "#D97706", "rank_str": "🥇 1st"}, 
+    2: {"fg": "#F8FAFC", "border": "#CBD5E1", "text": "#475569", "rank_str": "🥈 2nd"}, 
+    3: {"fg": "#FFF7ED", "border": "#FDBA74", "text": "#C2410C", "rank_str": "🥉 3rd"}  
 }
 
 leaderboard = ctk.CTkFrame(app, fg_color="#2b2b2b")
 if bg_img:
     ctk.CTkLabel(leaderboard, text="", image=bg_img).place(x=0, y=0, relwidth=1, relheight=1)
 
-# การ์ดพื้นหลังหลักสีขาวมนๆ
 leaderboard_card = ctk.CTkFrame(leaderboard, fg_color="white", corner_radius=12, border_width=0)
 leaderboard_card.place(relx=0.5, rely=0.5, anchor="center", relwidth=0.85, relheight=0.82)
 
 current_filter_style = "Standard"
 current_filter_size = "3x3"
-current_filter_pattern = "All" 
+current_filter_pattern = "All"  
 
 def update_leaderboard_view():
     for widget in lb_scroll_frame.winfo_children():
@@ -448,26 +443,35 @@ def update_leaderboard_view():
     for item in all_records:
         item_style = item.get("style")
         
-        # --- [แก้ไขจุดนี้] ตรวจสอบเงื่อนไขการกรอง Mode / Style ให้แม่นยำขึ้น ---
         style_match = False
         if current_filter_style == "Standard":
             if item_style == "Standard":
                 style_match = True
         elif current_filter_style == "Creative":
-            # รองรับทั้งข้อมูลที่บันทึกมาในชื่อ "Creative" และ "Image"
             if item_style in ["Creative", "Image"]:
                 style_match = True
 
-        # เช็กเงื่อนไข Size และ Pattern ต่อตามลำดับ
-        if style_match and item.get("size") == current_filter_size:
-            if current_filter_pattern == "All" or item.get("pattern") == current_filter_pattern:
+        item_size = str(item.get("size", "")).replace(" ", "")
+        filter_size = current_filter_size.replace(" ", "")
+
+        if style_match and item_size == filter_size:
+            p_pattern = item.get("pattern", "Random All")
+            
+            pattern_group_mapping = {
+                "Horizontal": "Horizontal", "แนวนอน": "Horizontal", "水平": "Horizontal",
+                "Vertical": "Vertical", "แนวตั้ง": "Vertical", "垂直": "Vertical",
+                "Diagonal": "Diagonal", "แนวเฉียง": "Diagonal", "対角線": "Diagonal",
+                "Random All": "Random All", "สุ่มทั้งหมด": "Random All", "สลับทั้งหมด": "Random All", "すべてシャッフル": "Random All"
+            }
+            
+            normalized_pattern = pattern_group_mapping.get(p_pattern, p_pattern)
+            
+            if current_filter_pattern == "All" or normalized_pattern == current_filter_pattern:
                 filtered_list.append(item)
-    # -----------------------------------------------------------------
     
     filtered_list.sort(key=lambda x: x.get("score", 0), reverse=True)
     
     for idx, item in enumerate(filtered_list, 1):
-        # ตั้งค่ารูปแบบแถว: Top 3 จะมีสีพิเศษ ส่วนอันดับทั่วไปจะเป็นสีขาวขอบเทาอ่อน
         if idx in RANK_CONFIG:
             bg_color = RANK_CONFIG[idx]["fg"]
             border_color = RANK_CONFIG[idx]["border"]
@@ -481,35 +485,42 @@ def update_leaderboard_view():
             rank_display = f"    {idx}"
             font_weight = "normal"
             
-        # สร้างกล่องแถวแบบการ์ดแยกชิ้น มีเส้นขอบและมุมโค้งมน (เหมือนในรูปเป๊ะ)
         row = ctk.CTkFrame(lb_scroll_frame, fg_color=bg_color, border_color=border_color, border_width=1.5, corner_radius=10, height=42)
         row.pack(fill="x", padx=8, pady=4)
-        row.pack_propagate(False) # ล็อคความสูงแถวให้เป๊ะเท่ากันทุกอัน
+        row.pack_propagate(False) 
         
-        # 1. Column: Rank
-        ctk.CTkLabel(row, text=rank_display, font=(FONT_FAMILY, 13, "bold"), text_color=text_color, width=70, anchor="w").pack(side="left", padx=(15, 0))
+        ctk.CTkLabel(row, text=rank_display, font=(FONT_FAMILY, 13, "bold"), text_color=text_color, width=60, anchor="w").pack(side="left", padx=(15, 5))
         
-        # 2. Column: Player Name (สไตล์ในรูปจะเป็น Name (Pattern | Size))
-        pattern_display = item.get("pattern", "All")
-        size_display = item.get("size", "3x3")
-        player_text = f"{item.get('name')} ({pattern_display} | {size_display})"
-        ctk.CTkLabel(row, text=player_text, font=(FONT_FAMILY, 13, font_weight), text_color="#1E293B", width=250, anchor="w").pack(side="left", padx=10)
+        p_name = item.get("name", "Guest")
+        ctk.CTkLabel(row, text=p_name, font=(FONT_FAMILY, 13, font_weight), text_color="#1E293B", width=130, anchor="w").pack(side="left", padx=5)
         
-        # 3. Column: Game Stats (ใช้จุด Dot ตรงกลางแบ่งสัดส่วน)
+        p_pattern = item.get("pattern", "Random All")
+        ctk.CTkLabel(row, text=p_pattern, font=(FONT_FAMILY, 13), text_color="#1E293B", width=100, anchor="w").pack(side="left", padx=5)
+        
+        p_size = item.get("size", "3x3")
+        ctk.CTkLabel(row, text=p_size, font=(FONT_FAMILY, 13), text_color="#1E293B", width=60, anchor="w").pack(side="left", padx=5)
+        
+        p_mode = item.get("mode", "English")
+        ctk.CTkLabel(row, text=p_mode, font=(FONT_FAMILY, 13), text_color="#1E293B", width=80, anchor="w").pack(side="left", padx=5)
+        
         sec = item.get('time', 0)
         time_str = f"{sec//60:02d}:{sec%60:02d}"
-        stat_text = f"⏱️ {time_str}  •  🐾 {item.get('moves')} moves"
-        ctk.CTkLabel(row, text=stat_text, font=(FONT_FAMILY, 12), text_color="#64748B", width=200, anchor="w").pack(side="left", padx=5)
+        stat_text = f"⏱️ {time_str}  •  🐾 {item.get('moves')}"
+        ctk.CTkLabel(row, text=stat_text, font=(FONT_FAMILY, 12), text_color="#64748B", width=120, anchor="w").pack(side="left", padx=5)
 
-        # 4. Column: Total Points (สีเขียวโดดเด่นตัดอารมณ์แบบในรูป)
-        score_str = f"{item.get('score'):,} pts"
-        ctk.CTkLabel(row, text=score_str, font=(FONT_FAMILY, 14, "bold"), text_color="#10B981", width=120, anchor="e").pack(side="right", padx=(0, 20))
+        if idx <= 3:
+            score_color = "#10B981"
+            score_font = (FONT_FAMILY, 14, "bold")
+        else:
+            score_color = "#94A3B8"
+            score_font = (FONT_FAMILY, 13, "normal")
+            
+        score_str = f"{item.get('score', 0):,} pts"
+        ctk.CTkLabel(row, text=score_str, font=score_font, text_color=score_color, width=100, anchor="e").pack(side="right", padx=20)
 
-# --- ปุ่มฟิลเตอร์แยกสีตามประเภทแบบในรูปภาพ ---
 def select_style_filter(style):
     global current_filter_style
     current_filter_style = style
-    # โหมดใช้สี Coral ส้มแดงเด่นๆ
     btn_std.configure(fg_color="#F87171" if style == "Standard" else "#F1F5F9", text_color="white" if style == "Standard" else "#475569")
     btn_cre.configure(fg_color="#F87171" if style == "Creative" else "#F1F5F9", text_color="white" if style == "Creative" else "#475569")
     update_leaderboard_view()
@@ -517,7 +528,6 @@ def select_style_filter(style):
 def select_size_filter(size):
     global current_filter_size
     current_filter_size = size
-    # ขนาดกริดใช้สีเขียวเข้มแบบในรูป
     btn_3x3.configure(fg_color="#16A34A" if size == "3x3" else "#F1F5F9", text_color="white" if size == "3x3" else "#475569")
     btn_4x4.configure(fg_color="#16A34A" if size == "4x4" else "#F1F5F9", text_color="white" if size == "4x4" else "#475569")
     btn_5x5.configure(fg_color="#16A34A" if size == "5x5" else "#F1F5F9", text_color="white" if size == "5x5" else "#475569")
@@ -526,7 +536,6 @@ def select_size_filter(size):
 def select_pattern_filter(pat):
     global current_filter_pattern
     current_filter_pattern = pat
-    # ทิศทางลีกใช้สีฟ้าอ่อน/น้ำเงินสไตล์ปุ่มแคปซูล
     for k, btn in pattern_buttons.items():
         if k == pat:
             btn.configure(fg_color="#0EA5E9", text_color="white")
@@ -538,25 +547,22 @@ def select_pattern_filter(pat):
 lb_title = ctk.CTkLabel(leaderboard_card, text="🏅 HALL OF FAME 🏅", font=(FONT_FAMILY, 24, "bold"), text_color="#1E293B")
 lb_title.pack(pady=(15, 8))
 
-# 1. แผงควบคุมโหมด (Standard / Creative)
 filter_frame_1 = ctk.CTkFrame(leaderboard_card, fg_color="transparent")
 filter_frame_1.pack(pady=3)
-btn_std = ctk.CTkButton(filter_frame_1, text="Standard Mode", width=130, height=30, corner_radius=15, font=(FONT_FAMILY, 12, "bold"), command=lambda: select_style_filter("Standard"))
+btn_std = ctk.CTkButton(filter_frame_1, text="Standard", width=130, height=30, corner_radius=15, font=(FONT_FAMILY, 12, "bold"), command=lambda: select_style_filter("Standard"))
 btn_std.pack(side="left", padx=4)
-btn_cre = ctk.CTkButton(filter_frame_1, text="Creative Mode", width=130, height=30, corner_radius=15, font=(FONT_FAMILY, 12, "bold"), command=lambda: select_style_filter("Creative"))
+btn_cre = ctk.CTkButton(filter_frame_1, text="Creative", width=130, height=30, corner_radius=15, font=(FONT_FAMILY, 12, "bold"), command=lambda: select_style_filter("Creative"))
 btn_cre.pack(side="left", padx=4)
 
-# 2. แผงควบคุมขนาด (3x3 / 4x4 / 5x5)
 filter_frame_2 = ctk.CTkFrame(leaderboard_card, fg_color="transparent")
 filter_frame_2.pack(pady=3)
-btn_3x3 = ctk.CTkButton(filter_frame_2, text="3 x 3 Grid", width=95, height=26, corner_radius=6, font=(FONT_FAMILY, 11, "bold"), command=lambda: select_size_filter("3x3"))
+btn_3x3 = ctk.CTkButton(filter_frame_2, text="3 x 3", width=95, height=26, corner_radius=6, font=(FONT_FAMILY, 11, "bold"), command=lambda: select_size_filter("3x3"))
 btn_3x3.pack(side="left", padx=4)
-btn_4x4 = ctk.CTkButton(filter_frame_2, text="4 x 4 Grid", width=95, height=26, corner_radius=6, font=(FONT_FAMILY, 11, "bold"), command=lambda: select_size_filter("4x4"))
+btn_4x4 = ctk.CTkButton(filter_frame_2, text="4 x 4", width=95, height=26, corner_radius=6, font=(FONT_FAMILY, 11, "bold"), command=lambda: select_size_filter("4x4"))
 btn_4x4.pack(side="left", padx=4)
-btn_5x5 = ctk.CTkButton(filter_frame_2, text="5 x 5 Grid", width=95, height=26, corner_radius=6, font=(FONT_FAMILY, 11, "bold"), command=lambda: select_size_filter("5x5"))
+btn_5x5 = ctk.CTkButton(filter_frame_2, text="5 x 5", width=95, height=26, corner_radius=6, font=(FONT_FAMILY, 11, "bold"), command=lambda: select_size_filter("5x5"))
 btn_5x5.pack(side="left", padx=4)
 
-# 3. แผงควบคุมลีกทิศทาง
 filter_frame_3 = ctk.CTkFrame(leaderboard_card, fg_color="transparent")
 filter_frame_3.pack(pady=(3, 12))
 
@@ -568,34 +574,33 @@ patterns_spec = [
     ("Diagonal", "↘️ Diagonal"),
     ("Random All", "🔀 Random All")
 ]
+
 for key, label in patterns_spec:
     btn = ctk.CTkButton(filter_frame_3, text=label, width=95, height=24, corner_radius=12, font=(FONT_FAMILY, 11, "bold"), command=lambda k=key: select_pattern_filter(k))
     btn.pack(side="left", padx=3)
     pattern_buttons[key] = btn
 
-# 4. กล่องตารางแสดงผลรายชื่อ
 lb_table_container = ctk.CTkFrame(leaderboard_card, fg_color="#F8FAFC", border_color="#E2E8F0", border_width=1, corner_radius=12)
 lb_table_container.pack(fill="both", expand=True, padx=25, pady=(0, 60))
 
-# หัวตารางแบบโปร่งสะอาดตา
 lb_header = ctk.CTkFrame(lb_table_container, fg_color="transparent", height=35)
 lb_header.pack(fill="x", padx=5, pady=(5, 0))
 lb_header.pack_propagate(False)
 
-ctk.CTkLabel(lb_header, text="Rank", font=(FONT_FAMILY, 13, "bold"), text_color="#64748B", width=70, anchor="w").pack(side="left", padx=15)
-ctk.CTkLabel(lb_header, text="Player Name (Pattern)", font=(FONT_FAMILY, 13, "bold"), text_color="#64748B", width=250, anchor="w").pack(side="left", padx=10)
-ctk.CTkLabel(lb_header, text="Game Stats", font=(FONT_FAMILY, 13, "bold"), text_color="#64748B", width=200, anchor="w").pack(side="left", padx=5)
-ctk.CTkLabel(lb_header, text="Total Points", font=(FONT_FAMILY, 13, "bold"), text_color="#64748B", width=120, anchor="e").pack(side="right", padx=20)
+ctk.CTkLabel(lb_header, text="Rank", font=(FONT_FAMILY, 13, "bold"), text_color="#64748B", width=60, anchor="w").pack(side="left", padx=(15, 5))
+ctk.CTkLabel(lb_header, text="Player Name", font=(FONT_FAMILY, 13, "bold"), text_color="#64748B", width=130, anchor="w").pack(side="left", padx=5)
+ctk.CTkLabel(lb_header, text="Pattern", font=(FONT_FAMILY, 13, "bold"), text_color="#64748B", width=100, anchor="w").pack(side="left", padx=5)
+ctk.CTkLabel(lb_header, text="Size", font=(FONT_FAMILY, 13, "bold"), text_color="#64748B", width=60, anchor="w").pack(side="left", padx=5)
+ctk.CTkLabel(lb_header, text="Mode", font=(FONT_FAMILY, 13, "bold"), text_color="#64748B", width=80, anchor="w").pack(side="left", padx=5)
+ctk.CTkLabel(lb_header, text="Game Stats", font=(FONT_FAMILY, 13, "bold"), text_color="#64748B", width=120, anchor="w").pack(side="left", padx=5)
+ctk.CTkLabel(lb_header, text="Total Points", font=(FONT_FAMILY, 13, "bold"), text_color="#64748B", width=100, anchor="e").pack(side="right", padx=20)
 
-# พื้นที่เลื่อนดูคะแนนด้านใน
 lb_scroll_frame = ctk.CTkScrollableFrame(lb_table_container, fg_color="transparent", corner_radius=0)
 lb_scroll_frame.pack(fill="both", expand=True, padx=4, pady=4)
 
-# ปุ่ม Cancel มุมซ้ายล่าง
 lb_back_btn = ctk.CTkButton(leaderboard_card, text="Cancel", width=100, height=32, command=show_start, **BTN_STYLES["cancel"])
 lb_back_btn.place(relx=0.02, rely=0.97, anchor="sw")
 
-# เปิดไฟปุ่มสถานะเริ่มต้น
 select_style_filter("Standard")
 select_size_filter("3x3")
 select_pattern_filter("All")
