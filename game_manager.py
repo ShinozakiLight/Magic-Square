@@ -161,9 +161,11 @@ class GameManager:
             path_coords = []
             n = self.n
             if arrange == "Horizontal":
+                # แนวนอน: วนแถว (r) ก่อน แล้วค่อยวนคอลัมน์ (c) -> (0,0), (0,1), (0,2)...
                 path_coords = [(r, c) for r in range(n) for c in range(n)]
             elif arrange == "Vertical":
-                path_coords = [(r, c) for r in range(n) for c in range(n)]
+                # แนวตั้ง (แก้ไขตรงนี้): วนคอลัมน์ (c) ก่อน แล้วค่อยวนแถว (r) -> (0,0), (1,0), (2,0)...
+                path_coords = [(r, c) for c in range(n) for r in range(n)]
             elif arrange == "Diagonal":
                 for d in range(2 * n - 1):
                     for r in range(max(0, d - n + 1), min(n, d + 1)):
@@ -292,10 +294,10 @@ class GameManager:
         diag2_sum = sum(self.current_nums[i][n-1-i] for i in range(n))   
 
         for i in range(n):
-            self.canvas.create_text(x0 + n*cell + 25, y0 + i*cell + cell/2, text=str(row_sums[i]), fill=("#27AE60" if row_sums[i] == M else "#E74C3C"), font=("Garamond", 14, "bold"))
-            self.canvas.create_text(x0 + i*cell + cell/2, y0 - 25, text=str(col_sums[i]), fill=("#27AE60" if col_sums[i] == M else "#E74C3C"), font=("Garamond", 14, "bold"))
-        self.canvas.create_text(x0 - 35, y0 - 25, text=f"{diag1_sum} ↘", fill=("#27AE60" if diag1_sum == M else "#E74C3C"), font=("Segoe UI Symbol", 14, "bold"))
-        self.canvas.create_text(x0 + n*cell + 35, y0 - 25, text=f"↙ {diag2_sum}", fill=("#27AE60" if diag2_sum == M else "#E74C3C"), font=("Segoe UI Symbol", 14, "bold"))
+            self.canvas.create_text(x0 + n*cell + 25, y0 + i*cell + cell/2, text=str(row_sums[i]), fill=("#27AE60" if row_sums[i] == M else "#E74C3C"), font=("Garamond", 17, "bold"))
+            self.canvas.create_text(x0 + i*cell + cell/2, y0 - 25, text=str(col_sums[i]), fill=("#27AE60" if col_sums[i] == M else "#E74C3C"), font=("Garamond", 17, "bold"))
+        self.canvas.create_text(x0 - 35, y0 - 25, text=f"{diag1_sum} ↘", fill=("#27AE60" if diag1_sum == M else "#E74C3C"), font=("Garamond", 17, "bold"))
+        self.canvas.create_text(x0 + n*cell + 35, y0 - 25, text=f"↙ {diag2_sum}", fill=("#27AE60" if diag2_sum == M else "#E74C3C"), font=("Garamond", 17, "bold"))
         self.check_win_status()
 
     def undo(self):
@@ -370,12 +372,17 @@ class GameManager:
         if self.particles: self.canvas.after(30, self.animate_fireworks)
 
     def update_ui_language(self):
-        texts = LANG_DB[self.get_lang()]
+        current_lang = self.get_lang()
+        texts = LANG_DB[current_lang]
         self.btn_back.configure(text=texts.get("cancel", "Cancel"))
         self.btn_shuffle.configure(text=texts.get("shuffle", "Shuffle"))
         self.btn_hint.configure(text=texts.get("hint", "Hint"))
         self.btn_undo.configure(text=texts.get("undo", "Undo"))
         self.btn_submit.configure(text=texts.get("submit", "Submit"))
+        minutes = self.elapsed_time // 60
+        seconds = self.elapsed_time % 60
+        time_text = texts.get("time_label", "Time")
+        self.lbl_timer.configure(text=f"{time_text} : {minutes:02d}:{seconds:02d}")
         self.redraw()
 
     def export_to_image(self):
@@ -650,7 +657,11 @@ class GameManager:
             self.elapsed_time = int(datetime.datetime.now().timestamp() - self.start_time)
             minutes = self.elapsed_time // 60
             seconds = self.elapsed_time % 60
-            self.lbl_timer.configure(text=f"Time : {minutes:02d}:{seconds:02d}")
+            
+            current_lang = self.get_lang()
+            time_text = LANG_DB[current_lang].get("time_label", "Time")
+            
+            self.lbl_timer.configure(text=f"{time_text} : {minutes:02d}:{seconds:02d}")
             self.card.after(1000, self.update_timer)
 
     def start_timer(self):

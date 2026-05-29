@@ -149,6 +149,7 @@ LANG_DB = {
         "all_patterns": "🌐 All Patterns",
         "cert_success_title": "Export Success",
         "cert_success_msg": "The certificate image has been successfully created:",
+        "time_label" : "Time"
     },
     "日本語": {
         "welcome": "マジック・スクエアへようこそ！", 
@@ -194,6 +195,7 @@ LANG_DB = {
         "all_patterns": "🌐 全てのパターン",
         "cert_success_title": "エクスポート成功",
         "cert_success_msg": "賞状の画像が正常に作成されました:",
+        "time_label" : "時間"
     },
     "ไทย": {
         "welcome": "ยินดีต้อนรับสู่จัตุรัสกล !",
@@ -239,5 +241,6 @@ LANG_DB = {
         "all_patterns": "🌐 ทุกรูปแบบ",
         "cert_success_title": "ส่งออกสำเร็จ",
         "cert_success_msg": "จัดทำภาพใบเกียรติบัตรเรียบร้อยแล้ว:",
+        "time_label" : "เวลา"
     }
 }

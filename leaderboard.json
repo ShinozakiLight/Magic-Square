@@ -31,5 +31,82 @@
         "time": 0,
         "moves": 99,
         "date": "2026-05-28 15:17"
+    },
+    {
+        "name": "กไก",
+        "style": "Standard",
+        "size": "3x3",
+        "pattern": "Horizontal",
+        "mode": "English",
+        "score": 14499,
+        "time": 3,
+        "moves": 99,
+        "date": "2026-05-29 13:21"
+    },
+    {
+        "name": "dwd",
+        "style": "Standard",
+        "size": "3x3",
+        "pattern": "Horizontal",
+        "mode": "English",
+        "score": 14505,
+        "time": 0,
+        "moves": 99,
+        "date": "2026-05-29 13:22"
+    },
+    {
+        "name": "Kampan",
+        "style": "Standard",
+        "size": "3x3",
+        "pattern": "Horizontal",
+        "mode": "English",
+        "score": 14529,
+        "time": 73,
+        "moves": 25,
+        "date": "2026-05-29 14:06"
+    },
+    {
+        "name": "Kampan",
+        "style": "Standard",
+        "size": "4x4",
+        "pattern": "Vertical",
+        "mode": "English",
+        "score": 14503,
+        "time": 1,
+        "moves": 99,
+        "date": "2026-05-29 14:24"
+    },
+    {
+        "name": "Kampan",
+        "style": "Creative",
+        "size": "3x3",
+        "pattern": "Horizontal",
+        "mode": "English",
+        "score": 14501,
+        "time": 2,
+        "moves": 99,
+        "date": "2026-05-29 14:31"
+    },
+    {
+        "name": "fwf",
+        "style": "Standard",
+        "size": "3x3",
+        "pattern": "Horizontal",
+        "mode": "English",
+        "score": 14505,
+        "time": 0,
+        "moves": 99,
+        "date": "2026-05-29 15:15"
+    },
+    {
+        "name": "dwd",
+        "style": "Standard",
+        "size": "5x5",
+        "pattern": "Horizontal",
+        "mode": "English",
+        "score": 14501,
+        "time": 2,
+        "moves": 99,
+        "date": "2026-05-29 15:43"
     }
 ]
