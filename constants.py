@@ -1,7 +1,7 @@
 # constants.py
 
-ALPHABET = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-SYMBOLS = list("★☆◆◇▲▼■□●○◎☯⚔⚒⚙⚓⚖♪♬♠♣♥♦♔♕♖")
+ALPHABET = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ") 
+SYMBOLS = list("✦✧❂☼☽☾☄■□◆◇★☯⚔⚜⚚☤⚕⚗⚙⚖⛓🗝♔♕♖♗♘♙♚♛♜♝♞♟")
 EMOJI_SET = ["🌟", "🚀", "🎈", "🍎", "🍊", "🍇", "🐶", "🐱", "👍", "🏀", "🎨", "🎬", "🎸", "🍕", "🍦", "🛸"]
 THAI_SET = list("กขคฆงจฉชซญฎฏฐฑฒณดตถทธนบปผฝพฟภมยรลวศษสหฬอฮ")
 JAPANESE_SET = list("あいうえおかきくけこさしすせそたちつてと")
@@ -22,38 +22,28 @@ POP = {
     "subtext":    "#222222"
 }
 
-# ==========================================
-# 🎨 CENTRALIZED BUTTON STYLES CONFIGURATION
-# ==========================================
-# คุณสามารถเปลี่ยนสี รูปร่าง และฟอนต์ของปุ่มทั้งหมดในระบบได้จากตรงนี้
 BTN_STYLES = {
-    # --- ปุ่มทั่วไป/ปุ่มหลักของหน้าต่าง ---
     "primary": {
         "fg_color": "#BEAEE2", "hover_color": "#575766", "text_color": "black",
         "corner_radius": 0, "border_width": 1, "border_color": "black", "font": ("Garamond", 18)
     },
-    # --- ปุ่มยกเลิก / ปุ่มย้อนกลับ ---
     "cancel": {
         "fg_color": "#F9F9F9", "hover_color": "#8C8C8C", "text_color": "black",
         "corner_radius": 0, "border_width": 1, "border_color": "black", "font": ("Garamond", 18)
     },
-    # --- ปุ่มหน้าต่างตารางคะแนน ---
     "leaderboard": {
         "fg_color": "#CDF0EA", "hover_color": "#575766", "text_color": "black",
         "corner_radius": 0, "border_width": 1, "border_color": "black", "font": ("Garamond", 18)
     },
-    # --- ปุ่มออกจากเกม / ปิดโปรแกรม ---
     "exit": {
         "fg_color": "#FF807E", "hover_color": "#575766", "text_color": "black",
         "corner_radius": 0, "border_width": 1, "border_color": "black", "font": ("Garamond", 18)
     },
-    # --- ปุ่มเปลี่ยนภาษา 🌐 ---
     "language": {
         "fg_color": "#F7DBF0", "hover_color": "#6B6B83", "text_color": "black",
         "corner_radius": 20, "font": ("Garamond", 14)
     },
     
-    # --- ปุ่มภายในหน้าบอร์ดเกม (GameManager) ---
     "game_cancel": {
         "fg_color": "#F9F9F9", "hover_color": "#8C8C8C", "text_color": "black",
         "corner_radius": 0, "border_width": 1, "border_color": "black", "font": ("Garamond", 16)
@@ -87,20 +77,14 @@ MODE_OPTIONS = {
 }
 
 MODE_TO_ENGLISH = {
-    # English
     "English": "English", "Japanese": "Japanese", "Thai": "Thai", "Emoji": "Emoji", "Symbols": "Symbols",
-    # 日本語
     "英語": "English", "日本語": "Japanese", "タイ語": "Thai", "絵文字": "Emoji", "記号": "Symbols",
-    # ไทย
     "อังกฤษ": "English", "ญี่ปุ่น": "Japanese", "ไทย": "Thai", "อีโมจิ": "Emoji", "สัญลักษณ์": "Symbols"
 }
 
 PATTERN_TO_ENGLISH = {
-    # ภาษาอังกฤษ
     "Random All": "Random All", "Horizontal": "Horizontal", "Vertical": "Vertical", "Diagonal": "Diagonal",
-    # ภาษาไทย
     "สลับทั้งหมด": "Random All", "แนวนอน": "Horizontal", "แนวตั้ง": "Vertical", "แนวทแยง": "Diagonal",
-    # ภาษาญี่ปุ่น
     "すべてシャッフル": "Random All", "水平方向": "Horizontal", "垂直方向": "Vertical", "対角線方向": "Diagonal"
 }
 
@@ -122,7 +106,7 @@ LANG_DB = {
         "undo" : "Undo",
         "hint" : "Hint",
         "hint_title": "Hint Limit",
-        "hint_msg": "You've used all 3 hints!",
+        "hint_msg": "You've used all hints!",
         "hint_success": "Hint used! ({} left)",
         "hint_none": "Every position is already correct!",
         "win_title": "Success!",
@@ -168,7 +152,7 @@ LANG_DB = {
         "undo" : "元に戻す", 
         "hint" : "ヒント",
         "hint_title": "ヒント制限",
-        "hint_msg": "ヒントは3回までです！",
+        "hint_msg": "ヒントをすべて使い切りました！",
         "hint_success": "ヒントを使いました！（残り {} 回）",
         "hint_none": "すべての位置が正しいです！",
         "win_title": "クリア！", 
@@ -214,7 +198,7 @@ LANG_DB = {
         "undo" : "ย้อนกลับ",
         "hint" : "ใบ้",
         "hint_title": "จำกัดคำใบ้",
-        "hint_msg": "คุณใช้สิทธิ์คำใบ้ครบ 3 ครั้งแล้ว!",
+        "hint_msg": "คุณใช้สิทธิ์คำใบ้ครบแล้ว!",
         "hint_success": "ใบ้ตำแหน่งให้แล้ว (เหลืออีก {} ครั้ง)",
         "hint_none": "ทุกตำแหน่งถูกต้องแล้ว !",
         "win_title": "สำเร็จ !",

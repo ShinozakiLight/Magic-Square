@@ -30,24 +30,21 @@ class GameManager:
         self.mode = "English" 
         self.visual_style = "Image" 
 
-        # =========================================================================
-        # [โซนปรับแต่งความสวยงามเฉพาะโหมด Creative (โหมดเล่นแบบมีภาพพื้นหลัง)]
-        # แก้ไขค่าวัดตรงนี้ได้เลยครับ ระบบจะอัปเดตทั้งหน้าจอเกมและใบเกียรติบัตรให้ตรงกัน
-        # =========================================================================
-        self.creative_img_opacity = 0.80      # ความชัดของรูปภาพ (0.0 = จางจนหาย, 1.0 = ชัดเท่าต้นฉบับ) ยิ่งจาง ฟอนต์ยิ่งเด่น
-        self.creative_bg_blend = (255, 255, 255) # สีที่ใช้เกลี่ยผสมให้รูปจางลง (255, 255, 255 คือสีขาวช่วยให้ภาพดูคลีนสะอาด)
-        self.creative_num_color = "#FFFFFF"   # สีของตัวเลข (แนะนำสีเข้มจัดหรือดำเพื่อให้ตัดกับรูปภาพจางๆ)
-        self.creative_char_color = "#FFFFFF"  # สีของตัวอักษรปริศนา
-        self.creative_border_color = "#D1D5DB" # สีเส้นขอบแบ่งช่องของโหมดรูปภาพ
-        # =========================================================================
+        self.creative_img_opacity = 0.80    
+        self.creative_bg_blend = (255, 255, 255) 
+        self.creative_num_color = "#FFFFFF"  
+        self.creative_char_color = "#FFFFFF" 
+        self.creative_border_color = "#D1D5DB"
         
         self.top_bar = ctk.CTkFrame(self.card, fg_color="transparent")
         self.top_bar.pack(fill="x", pady=(20, 10), padx=30)
 
-        self.btn_debug = ctk.CTkButton(self.top_bar, text="DEV", width=40, height=20, 
-                                       command=self.instant_win, **BTN_STYLES["game_dev"])
-        self.btn_debug.pack(side="right", padx=5)
-        
+    # -------------------- Devolopment Button for test game ----------------------------------------
+        # self.btn_debug = ctk.CTkButton(self.top_bar, text="DEV", width=40, height=20, 
+        #                                command=self.instant_win, **BTN_STYLES["game_dev"])
+        # self.btn_debug.pack(side="right", padx=5)
+    # ----------------------------------------------------------------------------------------------
+
         self.btn_back = ctk.CTkButton(self.top_bar, text="Cancel", width=90, height=35, 
                                       command=self.on_cancel, **BTN_STYLES["game_cancel"])
         self.btn_back.pack(side="left")
@@ -136,7 +133,6 @@ class GameManager:
                     p_left, p_top = c * piece_size, r * piece_size
                     crop_img = img.crop((p_left, p_top, p_left + piece_size, p_top + piece_size))
 
-                    # นวดเกลี่ยสีพื้นหลังตามระดับ Opacity เพื่อให้ภาพจางลงแบบมืออาชีพ สบายตาขึ้น
                     base_pastel = Image.new('RGBA', crop_img.size, self.creative_bg_blend + (255,))
                     final_piece = Image.blend(crop_img, base_pastel, alpha=1.0 - self.creative_img_opacity)
 
@@ -161,10 +157,8 @@ class GameManager:
             path_coords = []
             n = self.n
             if arrange == "Horizontal":
-                # แนวนอน: วนแถว (r) ก่อน แล้วค่อยวนคอลัมน์ (c) -> (0,0), (0,1), (0,2)...
                 path_coords = [(r, c) for r in range(n) for c in range(n)]
             elif arrange == "Vertical":
-                # แนวตั้ง (แก้ไขตรงนี้): วนคอลัมน์ (c) ก่อน แล้วค่อยวนแถว (r) -> (0,0), (1,0), (2,0)...
                 path_coords = [(r, c) for c in range(n) for r in range(n)]
             elif arrange == "Diagonal":
                 for d in range(2 * n - 1):
@@ -251,11 +245,9 @@ class GameManager:
                     self.canvas.create_image(x, y, anchor="nw", image=tk_img)
                     self.canvas.create_rectangle(x, y, x+cell, y+cell, outline=self.creative_border_color, width=1)
                     
-                    # เรียกใช้ชุดสีเฉพาะของ Creative จากคอนฟิกด้านบน
                     num_color = self.creative_num_color
                     char_color = self.creative_char_color
                 else:
-                    # ส่วนของโหมด Standard (ไม่เปลี่ยนแปลงใดๆ ทั้งสิ้นเพื่อคุมโทนเดิม)
                     bg_colors = ["#EBF5FB", "#FEF9E7", "#EAFAF1", "#F4ECF7"]
                     base_bg = bg_colors[(r + c) % len(bg_colors)]
                     bg = base_bg if (r, c) != self.selected else "#FBEEE6"
@@ -285,8 +277,16 @@ class GameManager:
                 num_y = y + cell * 0.2
                 char_y = y + cell * 0.55
 
+                if is_image_mode:
+                    for dx, dy in [(-1.0,-1.0), (-1.0,0), (-1.0,1.0), (0,-1.0), (0,1.0), (1.0,-1.0), (1.0,0), (1.0,1.0)]:
+                        self.canvas.create_text(x + cell/2 + dx, num_y + dy, text=str(val), font=num_font, fill="black")
                 self.canvas.create_text(x + cell/2, num_y, text=str(val), font=num_font, fill=num_color)
-                self.canvas.create_text(x + cell/2, char_y, text=char, font=char_font, fill=char_color)
+                
+                if char:
+                    if is_image_mode:
+                        for dx, dy in [(-2,-2), (-2,0), (-2,2), (0,-2), (0,2), (2,-2), (2,0), (2,2)]:
+                            self.canvas.create_text(x + cell/2 + dx, char_y + dy, text=char, font=char_font, fill="black")
+                    self.canvas.create_text(x + cell/2, char_y, text=char, font=char_font, fill=char_color)
 
         row_sums = [sum(row) for row in self.current_nums]
         col_sums = [sum(self.current_nums[r][ci] for r in range(n)) for ci in range(n)]
@@ -302,14 +302,27 @@ class GameManager:
 
     def undo(self):
         if self.undo_stack:
-            (r1, c1), (r2, c2) = self.undo_stack.pop()
+            pop_data = self.undo_stack.pop()
+            
+            if len(pop_data) == 3:
+                (r1, c1), (r2, c2), is_hint = pop_data
+            else:
+                (r1, c1), (r2, c2) = pop_data
+                is_hint = False
+                
             self.current_nums[r1][c1], self.current_nums[r2][c2] = self.current_nums[r2][c2], self.current_nums[r1][c1]
-            self.move_count -= 1
+            
+            if not is_hint:
+                self.move_count -= 1
+                
             self.redraw()
 
     def give_hint(self):
         texts = LANG_DB[self.get_lang()]
-        if self.hint_count >= 3:
+        
+        max_hints = {3: 3, 4: 5, 5: 8}.get(self.n, 3)
+        
+        if self.hint_count >= max_hints:
             messagebox.showwarning(texts["hint_title"], texts["hint_msg"])
             return
         wrong_positions = [(r, c) for r in range(self.n) for c in range(self.n) if self.current_nums[r][c] != self.target_goal[r][c]]
@@ -321,12 +334,12 @@ class GameManager:
         for r in range(self.n):
             for c in range(self.n):
                 if self.current_nums[r][c] == correct_val:
-                    self.undo_stack.append(((r_t, c_t), (r, c)))
+                    self.undo_stack.append(((r_t, c_t), (r, c), True))
                     self.current_nums[r_t][c_t], self.current_nums[r][c] = self.current_nums[r][c], self.current_nums[r_t][c_t]
-                    self.move_count += 1
+                    
                     self.hint_count += 1
                     self.redraw()
-                    messagebox.showinfo(texts["hint"], texts["hint_success"].format(3 - self.hint_count))
+                    messagebox.showinfo(texts["hint"], texts["hint_success"].format(max_hints - self.hint_count))
                     return
 
     def check_win_status(self):
@@ -390,19 +403,15 @@ class GameManager:
         if not os.path.exists(folder): 
             os.makedirs(folder)
             
-        # [ปรับปรุงเพื่อรองรับทุกภาษา] กรองเฉพาะตัวอักษรที่ระบบปฏิบัติการห้ามใช้ในชื่อไฟล์ออกเท่านั้น
-        # วิธีนี้จะทำให้ชื่อภาษาไทย ญี่ปุ่น อังกฤษ หรือช่องว่าง คงอยู่ครบถ้วนอย่างปลอดภัย
         forbidden_chars = ['\\', '/', ':', '*', '?', '"', '<', '>', '|']
         safe_name = "".join(char for char in self.player_name if char not in forbidden_chars).strip()
         if not safe_name: 
             safe_name = "Player"
             
-        # แยกข้อมูลวันที่และเวลาออกจากกันตามแพทเทิร์นที่กำหนด
         now = datetime.datetime.now()
-        date_str = now.strftime("%Y%m%d")  # รูปแบบ: ปีเดือนวัน (เช่น 20260528)
-        time_str = now.strftime("%H%M%S")  # รูปแบบ: ชั่วโมงนาทีวินาที (เช่น 131530)
+        date_str = now.strftime("%Y%m%d")  
+        time_str = now.strftime("%H%M%S")  
         
-        # [ปรับปรุง] ตั้งชื่อไฟล์ตามแพทเทิร์น: Certificate_{Name}_{Size}_{Mode}_{Date}_{Time}.png
         filename = f"Certificate_{safe_name}_{self.n}x{self.n}_{self.mode}_{date_str}_{time_str}.png"
         filepath = os.path.join(folder, filename)
 
@@ -410,7 +419,6 @@ class GameManager:
         cert_img = Image.new("RGBA", (img_w, img_h), (255, 255, 255, 255))
         draw = ImageDraw.Draw(cert_img)
 
-        # วาดพื้นหลัง Gradient ไล่โทนสุภาพเรียบร้อย
         for y in range(img_h):
             ratio = y / img_h
             r_c = int(30 + ratio * 40)
@@ -418,7 +426,6 @@ class GameManager:
             b_c = int(45 + ratio * 30)
             draw.line([(0, y), (img_w, y)], fill=(r_c, g_c, b_c, 255))
 
-        # กรอบการ์ดสีขาวหลัก
         card_margin = 50
         draw.rounded_rectangle([card_margin, card_margin, img_w - card_margin, img_h - card_margin], radius=25, fill=(255, 255, 255, 255))
         draw.rounded_rectangle([card_margin + 10, card_margin + 10, img_w - card_margin - 10, img_h - card_margin - 10], radius=20, outline=(30, 50, 80, 255), width=4)
@@ -439,7 +446,7 @@ class GameManager:
                         except: pass
             return ImageFont.load_default()
 
-        def draw_mixed_text(text_str, x, y, size, fill_color, anchor="mm"):
+        def draw_mixed_text(text_str, x, y, size, fill_color, anchor="mm", draw_outline=False, outline_color=(0,0,0,255)):
             fonts_map = {
                 "english": load_font("english", size),
                 "thai": load_font("thai", size),
@@ -467,7 +474,7 @@ class GameManager:
                 try: w = draw.textlength(ch, font=f)
                 except: w = f.getbbox(ch)[2] - f.getbbox(ch)[0] if hasattr(f, "getbbox") else 12
                 
-                char_data.append((ch, f, w))
+                char_data.append((ch, f, w, ftype))
                 total_w += w
             
             if anchor == "mm":
@@ -477,45 +484,47 @@ class GameManager:
             else:
                 curr_x = x
 
-            for ch, f, w in char_data:
+            for ch, f, w, ftype in char_data:
+                if draw_outline and ftype != "emoji":
+                    offset = 2 if size > 30 else 1
+                    for dx in [-offset, 0, offset]:
+                        for dy in [-offset, 0, offset]:
+                            if dx != 0 or dy != 0:
+                                draw.text((curr_x + dx, y + dy), ch, font=f, fill=outline_color, anchor="lm")
+                
                 draw.text((curr_x, y), ch, font=f, fill=fill_color, anchor="lm")
                 curr_x += w
 
             return total_w
 
-        # หัวข้อใบเซอร์ด้านบน
-        draw_mixed_text("CONGRATULATIONS!", img_w / 2, 200, 64, (30, 50, 80, 255), anchor="mm")
-        draw_mixed_text("Magic Square Master Completion Certificate", img_w / 2, 270, 28, (194, 130, 12, 255), anchor="mm")
+        draw_mixed_text("CONGRATULATIONS!", img_w / 2, 190, 64, (30, 50, 80, 255), anchor="mm")
+        draw_mixed_text("Successfully Mastered the Magic Square Puzzle", img_w / 2, 265, 28, (150, 155, 227, 255), anchor="mm")
 
-        # ตารางปริศนา
-        grid_size = 580
-        start_x = (img_w - grid_size) / 2
-        start_y = 420  
+        grid_size = 750
+        start_x = (img_w - grid_size) / 2  
+        start_y = 410                
         cell_size = grid_size / self.n
         M = self.n * (self.n * self.n + 1) // 2
 
-        # พื้นหลังแผงตารางปริศนา
         draw.rounded_rectangle([start_x - 15, start_y - 15, start_x + grid_size + 15, start_y + grid_size + 15], radius=12, fill=(244, 246, 249, 255), outline=(210, 218, 226, 255), width=2)
 
-        # วาดผลรวมแนวตั้งและแนวนอนรอบตาราง
         for i in range(self.n):
             rs = sum(self.current_nums[i])
             cs = sum(self.current_nums[r][i] for r in range(self.n))
-            draw_mixed_text(str(rs), start_x + grid_size + 50, start_y + (i + 0.5) * cell_size, 24, (39, 174, 96, 255) if rs == M else (231, 76, 60, 255), anchor="mm")
-            draw_mixed_text(str(cs), start_x + (i + 0.5) * cell_size, start_y - 45, 24, (39, 174, 96, 255) if cs == M else (231, 76, 60, 255), anchor="mm")
+            draw_mixed_text(str(rs), start_x + grid_size + 50, start_y + (i + 0.5) * cell_size, 26, (39, 174, 96, 255) if rs == M else (231, 76, 60, 255), anchor="mm")
+            draw_mixed_text(str(cs), start_x + (i + 0.5) * cell_size, start_y - 45, 26, (39, 174, 96, 255) if cs == M else (231, 76, 60, 255), anchor="mm")
 
         diag1_sum = sum(self.current_nums[i][i] for i in range(self.n))
         diag2_sum = sum(self.current_nums[i][self.n - 1 - i] for i in range(self.n))
         
-        draw_mixed_text(f"{diag1_sum} ↘", start_x - 60, start_y - 45, 24, (39, 174, 96, 255) if diag1_sum == M else (231, 76, 60, 255), anchor="mm")
-        draw_mixed_text(f"↙ {diag2_sum}", start_x + grid_size + 60, start_y - 45, 24, (39, 174, 96, 255) if diag2_sum == M else (231, 76, 60, 255), anchor="mm")
+        draw_mixed_text(f"{diag1_sum} ↘", start_x - 65, start_y - 45, 26, (39, 174, 96, 255) if diag1_sum == M else (231, 76, 60, 255), anchor="mm")
+        draw_mixed_text(f"↙ {diag2_sum}", start_x + grid_size + 65, start_y - 45, 26, (39, 174, 96, 255) if diag2_sum == M else (231, 76, 60, 255), anchor="mm")
 
         bg_colors_hex = ["#EBF5FB", "#FEF9E7", "#EAFAF1", "#F4ECF7"]
         def hex_to_rgb(hex_str):
             h = hex_str.lstrip('#')
             return tuple(int(h[i:i+2], 16) for i in (0, 2, 4)) + (255,)
 
-        # ลูปวาดช่องในตาราง
         for r in range(self.n):
             for ci in range(self.n):
                 x_pos = start_x + ci * cell_size
@@ -524,12 +533,14 @@ class GameManager:
                 char = self.num_to_char.get(val, "")
                 
                 is_image_mode = (self.visual_style == "Creative" and val in self.image_pieces)
-                
+                use_text_outline = False
+
                 if is_image_mode:
                     piece_img = self.image_pieces[val].resize((int(cell_size - 4), int(cell_size - 4)), Image.LANCZOS)
                     cert_img.paste(piece_img, (int(x_pos + 2), int(y_pos + 2)), piece_img if piece_img.mode == "RGBA" else None)
                     num_col = hex_to_rgb(self.creative_num_color)
                     char_col = hex_to_rgb(self.creative_char_color)
+                    use_text_outline = True
                 else:
                     bg_color_pick = bg_colors_hex[(r + ci) % len(bg_colors_hex)]
                     bg_cell_color = hex_to_rgb(bg_color_pick)
@@ -539,22 +550,26 @@ class GameManager:
 
                 draw.rectangle([x_pos, y_pos, x_pos + cell_size, y_pos + cell_size], outline=(174, 182, 191, 255), width=1)
 
-                num_y_offset = y_pos + cell_size * 0.22
-                char_y_offset = y_pos + cell_size * 0.60
+                num_size = max(16, int(cell_size * 0.16))
+                num_x_pos = x_pos + cell_size / 2    
+                num_y_pos = y_pos + cell_size * 0.20   
                 
-                draw_mixed_text(str(val), x_pos + cell_size / 2, num_y_offset, int(cell_size * 0.15), num_col, anchor="mm")
-                draw_mixed_text(str(char), x_pos + cell_size / 2, char_y_offset, int(cell_size * 0.44), char_col, anchor="mm")
+                char_size = max(28, int(cell_size * 0.48))
+                char_x_pos = x_pos + cell_size / 2
+                char_y_pos = y_pos + cell_size * 0.55
+                
+                draw_mixed_text(str(val), num_x_pos, num_y_pos, num_size, num_col, anchor="mm", draw_outline=use_text_outline)
+                draw_mixed_text(str(char), char_x_pos, char_y_pos, char_size, char_col, anchor="mm", draw_outline=use_text_outline)
 
-        # แผงข้อมูลผู้เล่นด้านล่าง
-        badge_y = 1260  
-        badge_w, badge_h = 320, 115
-        badge_gap = 40
+        badge_y = 1310  
+        badge_w, badge_h = 340, 120
+        badge_gap = 30
         start_badge_x = (img_w - (badge_w * 3 + badge_gap * 2)) / 2
 
         stats_summary = [
-            ("PLAYER NAME", self.player_name if self.player_name else "Guest", (194, 130, 12, 255)),
-            ("TOTAL MOVES", f"{self.move_count} Steps", (39, 174, 96, 255)),
-            ("GAME MODE", f"{self.mode}", (41, 128, 185, 255))
+            ("PLAYER NAME", self.player_name if self.player_name else "Guest", (168, 216, 234, 255)),
+            ("TOTAL MOVES", f"{self.move_count} Steps", (170, 150, 218, 255)),
+            ("GAME MODE", f"{self.mode}", (252, 186, 211, 255))
         ]
 
         for idx, (title, desc, color_theme) in enumerate(stats_summary):
@@ -562,17 +577,16 @@ class GameManager:
             draw.rounded_rectangle([bx, badge_y, bx + badge_w, badge_y + badge_h], radius=12, fill=(248, 249, 250, 255))
             draw.rounded_rectangle([bx, badge_y, bx + 12, badge_y + badge_h], radius=4, fill=color_theme)
             
-            draw_mixed_text(title, bx + 35, badge_y + 35, 20, (100, 110, 120, 255), anchor="lm")
-            draw_mixed_text(desc, bx + 35, badge_y + 78, 25, (30, 30, 30, 255), anchor="lm")
+            draw_mixed_text(title, bx + 35, badge_y + 36, 20, (100, 110, 120, 255), anchor="lm")
+            draw_mixed_text(desc, bx + 35, badge_y + 80, 26, (30, 30, 30, 255), anchor="lm")
 
         p_minutes = self.elapsed_time // 60
         p_seconds = self.elapsed_time % 60
         time_taken_str = f"{p_minutes:02d}:{p_seconds:02d}"
         completed_on_str = now.strftime("%Y-%m-%d %H:%M:%S")
 
-        # วันที่และเวลาขวาล่างสุด
-        draw_mixed_text(f"Time Elapsed: {time_taken_str}", img_w - 90, 1580, 16, (120, 130, 140, 255), anchor="rm")
-        draw_mixed_text(f"Completed Date: {completed_on_str}", img_w - 90, 1615, 16, (120, 130, 140, 255), anchor="rm")
+        draw_mixed_text(f"Time : {time_taken_str}", img_w - 90, 1590, 16, (120, 130, 140, 255), anchor="rm")
+        draw_mixed_text(f"Date : {completed_on_str}", img_w - 90, 1625, 16, (120, 130, 140, 255), anchor="rm")
     
         final_cert = cert_img.convert("RGB")
         final_cert.save(filepath, "PNG")
@@ -600,7 +614,8 @@ class GameManager:
         }
         target_pattern = getattr(self, 'arrange_mode', "Random All")
         base_score = pattern_base_scores.get(target_pattern, 30000)
-        penalty = (self.elapsed_time * 2) + (self.move_count * 5) + (self.hint_count * 100)
+        
+        penalty = (self.elapsed_time * 2) + (self.move_count * 5) + (self.hint_count * 50)  # penalty
         final_score = max(base_score - penalty, 100)
         
         target_style = "Standard" if self.visual_style == "Standard" else "Creative"

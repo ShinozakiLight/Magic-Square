@@ -238,7 +238,6 @@ exit_btn.pack(pady=(10, 10))
 
 
 # ----------------- UI: Info (Page 2) -----------------
-# [แก้ไขเพิ่มตัวแปรและฟังก์ชันจำกัดความยาวของอักษรไว้ที่ตรงนี้]
 def limit_name_length(*args):
     value = name_var.get()
     if len(value) > 15:
@@ -543,7 +542,6 @@ def select_pattern_filter(pat):
             btn.configure(fg_color="#F1F5F9", text_color="#475569")
     update_leaderboard_view()
 
-# --- ส่วนของการจัดวางคอมโพเนนต์ ---
 lb_title = ctk.CTkLabel(leaderboard_card, text="🏅 HALL OF FAME 🏅", font=(FONT_FAMILY, 24, "bold"), text_color="#1E293B")
 lb_title.pack(pady=(15, 8))
 
