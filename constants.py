@@ -133,7 +133,16 @@ LANG_DB = {
         "all_patterns": "🌐 All Patterns",
         "cert_success_title": "Export Success",
         "cert_success_msg": "The certificate image has been successfully created:",
-        "time_label" : "Time"
+        "time_label" : "Time",
+        "game_completed_title": "Game Completed",
+        "game_completed_msg": "You have already completed the Magic Square!\nPlease click the 'Submit' button to finalize your results.",
+        "cancel_confirm_title": "Confirm Exit",
+        "cancel_confirm_msg": "Are you sure you want to exit?\nYour current game progress or completed board will be lost.",
+        "exit_confirm_title": "Confirm Exit",
+        "exit_confirm_msg": "Are you sure you want to exit?",
+        "name_length_title_error": "Error",
+        "name_length_error": "Name must be 15 characters or less!"
+        
     },
     "日本語": {
         "welcome": "マジック・スクエアへようこそ！", 
@@ -179,7 +188,15 @@ LANG_DB = {
         "all_patterns": "🌐 全てのパターン",
         "cert_success_title": "エクスポート成功",
         "cert_success_msg": "賞状の画像が正常に作成されました:",
-        "time_label" : "時間"
+        "time_label" : "時間",
+        "game_completed_title": "ゲームクリア",
+        "game_completed_msg": "魔方陣がすでに完成しています！\n「決定」ボタンを押して結果を保存してください。",
+        "cancel_confirm_title": "終了の確認",
+        "cancel_confirm_msg": "本当にゲームを終了しますか？\n現在のプレイ状況やクリア結果は失われます。",
+        "exit_confirm_title": "終了の確認",
+        "exit_confirm_msg": "本当にプログラムを閉じますか？",
+        "name_length_title_error": "エラー",
+        "name_length_error": "名前は15文字以内にする必要があります！"
     },
     "ไทย": {
         "welcome": "ยินดีต้อนรับสู่จัตุรัสกล !",
@@ -225,6 +242,14 @@ LANG_DB = {
         "all_patterns": "🌐 ทุกรูปแบบ",
         "cert_success_title": "ส่งออกสำเร็จ",
         "cert_success_msg": "จัดทำภาพใบเกียรติบัตรเรียบร้อยแล้ว:",
-        "time_label" : "เวลา"
+        "time_label" : "เวลา",
+        "game_completed_title": "เกมเสร็จสิ้นแล้ว",
+        "game_completed_msg": "คุณไขปริศนา Magic Square สำเร็จแล้ว!\nกรุณากดปุ่ม 'ตกลง' เพื่อบันทึกผลการเล่นของคุณ",
+        "cancel_confirm_title": "ยืนยันการออกจากเกม",
+        "cancel_confirm_msg": "คุณแน่ใจหรือไม่ว่าต้องการออกจากเกม?\nความคืบหน้าหรือผลการเล่นในกระดานนี้จะหายไป",    
+        "exit_confirm_title": "ยืนยันการปิดโปรแกรม",
+        "exit_confirm_msg": "คุณแน่ใจหรือไม่ว่าต้องการปิดโปรแกรม?",
+        "name_length_title_error": "ข้อผิดพลาด",
+        "name_length_error": "ชื่อผู้ใช้ต้องยาวไม่เกิน 15 ตัวอักษร !"
     }
 }

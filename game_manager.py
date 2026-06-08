@@ -46,10 +46,10 @@ class GameManager:
     # ----------------------------------------------------------------------------------------------
 
         self.btn_back = ctk.CTkButton(self.top_bar, text="Cancel", width=90, height=35, 
-                                      command=self.on_cancel, **BTN_STYLES["game_cancel"])
+                                      command=self.cancel_game, **BTN_STYLES["game_cancel"])
         self.btn_back.pack(side="left")
 
-        self.btn_shuffle = ctk.CTkButton(self.top_bar, text="Shuffle", width=90, height=35, 
+        self.btn_shuffle = ctk.CTkButton(self.top_bar, text="Shuffle", width=90, height=35,
                                          command=self.shuffle_board, **BTN_STYLES["game_shuffle"])
         self.btn_shuffle.pack(side="left", padx=15)
         
@@ -185,7 +185,27 @@ class GameManager:
             random.shuffle(all_nums) 
             self.num_to_char = {num: char_sequence[i] for i, num in enumerate(all_nums)}
 
+    def cancel_game(self):
+        texts = LANG_DB[self.get_lang()]
+        
+        confirm = messagebox.askyesno(
+            texts["cancel_confirm_title"], 
+            texts["cancel_confirm_msg"]
+        )
+        
+        if confirm:
+            self.on_cancel()
+        else:
+            return
+
+
     def shuffle_board(self):
+        texts = LANG_DB[self.get_lang()]
+
+        if getattr(self, 'game_won', False):
+            messagebox.showwarning(texts["game_completed_title"], texts["game_completed_msg"])
+            return
+
         nums = list(range(1, self.n * self.n + 1))
         random.shuffle(nums)
         self.current_nums = [nums[i*self.n : (i+1)*self.n] for i in range(self.n)]
@@ -301,6 +321,13 @@ class GameManager:
         self.check_win_status()
 
     def undo(self):
+        texts = LANG_DB[self.get_lang()]
+
+        # ล็อกไม่ให้ Undo หากเล่นชนะแล้ว
+        if getattr(self, 'game_won', False):
+            messagebox.showwarning(texts["game_completed_title"], texts["game_completed_msg"])
+            return
+
         if self.undo_stack:
             pop_data = self.undo_stack.pop()
             
@@ -319,16 +346,23 @@ class GameManager:
 
     def give_hint(self):
         texts = LANG_DB[self.get_lang()]
+
+        # เช็คว่าเกมจบแล้วหรือยัง ดึงค่า Title และ Message จากภาษาที่เลือกมาแสดงได้ทันที
+        if getattr(self, 'game_won', False):
+            messagebox.showinfo(texts["game_completed_title"], texts["game_completed_msg"])
+            return
         
         max_hints = {3: 3, 4: 5, 5: 8}.get(self.n, 3)
         
         if self.hint_count >= max_hints:
             messagebox.showwarning(texts["hint_title"], texts["hint_msg"])
             return
+            
         wrong_positions = [(r, c) for r in range(self.n) for c in range(self.n) if self.current_nums[r][c] != self.target_goal[r][c]]
         if not wrong_positions:
             messagebox.showinfo(texts["hint"], texts["hint_none"])
             return
+            
         r_t, c_t = wrong_positions[0]
         correct_val = self.target_goal[r_t][c_t]
         for r in range(self.n):

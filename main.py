@@ -23,15 +23,10 @@ def hide_all():
     leaderboard.pack_forget()
 
 def end():
-    if current_language == "ไทย":
-        title = "ยืนยันการปิดโปรแกรม"
-        message = "คุณแน่ใจหรือไม่ว่าต้องการปิดโปรแกรม?"
-    elif current_language == "日本語":
-        title = "終了の確認"
-        message = "本当にプログラムを閉じますか？"
-    else:
-        title = "Confirm Exit"
-        message = "Are you sure you want to exit?"
+    texts = LANG_DB[current_language]
+    
+    title = texts.get("exit_confirm_title", "Confirm Exit")
+    message = texts.get("exit_confirm_msg", "Are you sure you want to exit?")
 
     if messagebox.askyesno(title, message):
         app.destroy()
@@ -62,12 +57,9 @@ def validate_and_submit():
         return
     
     if len(name) > 15:
-        if current_language == "ไทย":
-            messagebox.showwarning("ข้อผิดพลาด", "ชื่อผู้ใช้ต้องยาวไม่เกิน 15 ตัวอักษร !")
-        elif current_language == "日本語":
-            messagebox.showwarning("エラー", "名前は15文字以内にする必要があります！")
-        else:
-            messagebox.showwarning("Error", "Name must be 15 characters or less!")
+        title = texts.get("name_length_title_error", "Error")
+        message = texts.get("name_length_error", "Name must be 15 characters or less!")
+        messagebox.showwarning(title, message)
         return
     
     if style_var.get() == "Creative": 
