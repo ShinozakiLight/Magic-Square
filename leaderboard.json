@@ -339,5 +339,93 @@
         "time": 0,
         "moves": 99,
         "date": "2026-06-04 13:57"
+    },
+    {
+        "name": "Kampan",
+        "style": "Standard",
+        "size": "4x4",
+        "pattern": "Horizontal",
+        "mode": "English",
+        "score": 14871,
+        "time": 27,
+        "moves": 15,
+        "date": "2026-06-09 14:11"
+    },
+    {
+        "name": "Peter",
+        "style": "Standard",
+        "size": "3x3",
+        "pattern": "Vertical",
+        "mode": "English",
+        "score": 14946,
+        "time": 12,
+        "moves": 6,
+        "date": "2026-06-09 14:12"
+    },
+    {
+        "name": "愛子",
+        "style": "Creative",
+        "size": "3x3",
+        "pattern": "Horizontal",
+        "mode": "Japanese",
+        "score": 14891,
+        "time": 17,
+        "moves": 15,
+        "date": "2026-06-09 14:14"
+    },
+    {
+        "name": "พลกฤต",
+        "style": "Standard",
+        "size": "4x4",
+        "pattern": "Horizontal",
+        "mode": "English",
+        "score": 14501,
+        "time": 2,
+        "moves": 99,
+        "date": "2026-06-09 14:17"
+    },
+    {
+        "name": "彩綾",
+        "style": "Standard",
+        "size": "5x5",
+        "pattern": "Horizontal",
+        "mode": "English",
+        "score": 14501,
+        "time": 2,
+        "moves": 99,
+        "date": "2026-06-09 14:18"
+    },
+    {
+        "name": "test",
+        "style": "Creative",
+        "size": "4x4",
+        "pattern": "Random All",
+        "mode": "Emoji",
+        "score": 29503,
+        "time": 1,
+        "moves": 99,
+        "date": "2026-06-09 14:19"
+    },
+    {
+        "name": "千枝",
+        "style": "Standard",
+        "size": "3x3",
+        "pattern": "Random All",
+        "mode": "Japanese",
+        "score": 29501,
+        "time": 2,
+        "moves": 99,
+        "date": "2026-06-09 14:19"
+    },
+    {
+        "name": "ดได",
+        "style": "Standard",
+        "size": "3x3",
+        "pattern": "Horizontal",
+        "mode": "English",
+        "score": 14505,
+        "time": 0,
+        "moves": 99,
+        "date": "2026-06-09 14:30"
     }
 ]

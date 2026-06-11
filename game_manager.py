@@ -323,7 +323,6 @@ class GameManager:
     def undo(self):
         texts = LANG_DB[self.get_lang()]
 
-        # ล็อกไม่ให้ Undo หากเล่นชนะแล้ว
         if getattr(self, 'game_won', False):
             messagebox.showwarning(texts["game_completed_title"], texts["game_completed_msg"])
             return
@@ -347,7 +346,6 @@ class GameManager:
     def give_hint(self):
         texts = LANG_DB[self.get_lang()]
 
-        # เช็คว่าเกมจบแล้วหรือยัง ดึงค่า Title และ Message จากภาษาที่เลือกมาแสดงได้ทันที
         if getattr(self, 'game_won', False):
             messagebox.showinfo(texts["game_completed_title"], texts["game_completed_msg"])
             return
