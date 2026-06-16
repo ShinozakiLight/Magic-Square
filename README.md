@@ -4,14 +4,15 @@
 [![CustomTkinter](https://img.shields.io/badge/UI-CustomTkinter-orange)](https://github.com/TomSchimansky/CustomTkinter)
 [![Pillow](https://img.shields.io/badge/Image-Pillow-yellow)](https://python-pillow.org/)
 
-A sophisticated **Magic Square Puzzle** game combining mathematical logic with a polished, modern user interface. Conceptualized in Figma and brought to life with Python and CustomTkinter, this project delivers a highly professional and aesthetically pleasing desktop application experience.
+A sophisticated, Figma-conceptualized Magic Square Puzzle game built with Python and CustomTkinter. Designed as an interactive educational software to foster logical thinking and problem-solving skills among younger students, delivering a polished and highly professional desktop application experience.
 
 ---
 
 ## ✨ Features
 
 * **Customizable Grid:** Choose between 3x3, 4x4, or 5x5 difficulty levels to suit different skill levels.
-* **Versatile Game Modes:** * **Standard Mode:** Traditional number and character-based puzzles.
+* **Versatile Game Modes:**
+  * **Standard Mode:** Traditional number and character-based puzzles.
   * **Creative Mode:** Transforms selected images into interactive, translucent puzzle tiles perfectly aligned on the magic grid.
 * **Dynamic Content:** Supports a variety of character patterns including English, Thai, Japanese, Emojis, and Symbols.
 * **Multi-Language UI:** Fully localized interface with seamless switching between English, Japanese, and Thai.
@@ -36,15 +37,6 @@ Launch the application by running the main script:
 python main.py
 ```
 
-## 🎨 Design & Presentation
-Figma Design
-
-[Figma](https://www.figma.com/proto/bnkZzjK5zGgIdclTjb1IPo/Magic-Square?node-id=0-1&t=VBU1O17SXo8D9ENZ-1)
-
-Canva Presentation
-
-[Canva](https://canva.link/3wsemf9d6bz8gf8)
-
 ## 👤 Developer
-Phonlakrit Somsong
+Phonlakrit Somsong - Computer Engineering Rajamangala University of Technology Thanyaburi. 
 
